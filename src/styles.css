@@ -1,0 +1,128 @@
+*{
+    margin: 0;
+    padding: 0; box-sizing: border-box;
+}
+
+html, body {
+    overflow: hidden;
+}
+
+body{
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+    background-image: url("@/assets/nininshou_table.png");
+    background-repeat: no-repeat;
+    background-size: auto;
+    background-position: center;
+    flex-direction: column;
+}
+
+#root{
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+    #background-image: url("@/assets/nininshou_table.png");
+    background-repeat: no-repeat;
+    #background-color: #faf0e1;
+    flex-direction: column;
+}
+
+.envelope-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  line-height: 54px;
+  text-align: center;
+  font-size: 24px;
+  font-family: 'Caveat', 'Patrick Hand', cursive;
+  color: #5a4a3a;
+  opacity: 0.6;
+  border: 1.5px solid #5a4a3a;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wrapper{
+    height: 200px;
+    width: 320px;
+    position:relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 0;
+    perspective: 1000px;
+}
+
+.envelope {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 0 1px rgba(0,0,0,0.2), inset 0 0 1px rgba(0,0,0,0.2);
+  font-size: 28px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.front {
+  transform: rotateY(0deg);
+}
+
+.back {
+  transform: rotateY(180deg);
+}
+
+.top {
+  transform: rotateY(180deg);
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: #e5e3e0;
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    95% 100%,
+    5% 100%
+  );
+  z-index: 100;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+}
