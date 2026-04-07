@@ -19,6 +19,7 @@ export interface Letter {
 
 export interface Envelope {
   envelope:      number;
+  date?: string | null;
   spotify_embed: string;
   pages:         Letter[];
 }

@@ -59,7 +59,7 @@ function LetterPage({ page, i, current, total, setPageRef }: {
   );
 }
 
-function pageAnimate(i: number, current: number, soundFn) {
+function pageAnimate(i: number, current: number, soundFn: () => void) {
   if (i >= current) return { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 };
   const off = current - i;
   soundFn();
@@ -78,7 +78,7 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
 
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
   useEffect(() => {
-        const close = (e) => {
+        const close = (e: KeyboardEvent) => {
           if(e.keyCode === 27){
             onClose();
           }
