@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import useSound from 'use-sound';
 import envelopeSound from './assets/envelope.wav';
 import './styles.css';
@@ -29,8 +30,36 @@ export default function App() {
     setTriggerPage({ envelopeIndex, pageIndex, ts: Date.now() });
   };
 
+  // Preload neighbours so they're cached before the user gets there
+  useEffect(() => {
+    [-2, -1, 1, 2].forEach(offset => {
+      const idx = currentEnvelope + offset;
+      if (idx >= 0 && idx < ENVELOPE_COUNT) {
+        new Image().src = `/nininshou_table_${idx}.png`;
+      }
+    });
+  }, [currentEnvelope]);
+
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
+      <AnimatePresence>
+        <motion.div
+          key={currentEnvelope}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: -1,
+            backgroundImage: `url(/nininshou_table_${currentEnvelope}.png)`,
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'auto',
+            backgroundPosition: 'center',
+          }}
+        />
+      </AnimatePresence>
       <BurgerMenu
         currentEnvelope={currentEnvelope}
         onSelect={setCurrentEnvelope}
