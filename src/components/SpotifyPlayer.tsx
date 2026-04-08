@@ -1,6 +1,10 @@
 import { motion, AnimatePresence } from 'motion/react';
 
-export default function SpotifyPlayer({ link }) {
+interface Props {
+  link: string | null;
+}
+
+export default function SpotifyPlayer({ link }: Props) {
   return (
     <div style={styles.anchor}>
       <AnimatePresence>
@@ -16,7 +20,6 @@ export default function SpotifyPlayer({ link }) {
               src={link}
               width="300"
               height="80"
-              frameBorder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
               style={styles.iframe}
@@ -28,7 +31,7 @@ export default function SpotifyPlayer({ link }) {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   anchor: {
     position: 'fixed',
     bottom: 72,

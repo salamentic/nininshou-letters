@@ -7,24 +7,16 @@ SRC = Path(__file__).parent.parent / "src/assets/nininshou.txt"
 OUT = Path(__file__).parent.parent / "src/assets/nininshou.json"
 
 DATE_RE  = re.compile(r"^(\d+/\d+)")
-STAMP_RE = re.compile(r"^(\d+)-(\d+)")
+PAGE_RE = re.compile(r"^(\d+)-(\d+)")
 
-def pagetype_and_author(body: str) -> tuple[str, str]:
-    if "Greetings" in body:
-        return "lined", "boy"
-    if len(body) < 400 or body.count("\n") > len(body) / 30:
-        return "manuscript", "boy"
-    return "lined", "sensei"
-
-def finalize(page: dict) -> dict:
+def finalize(page: dict, author: str) -> dict:
     body = page["body"].strip()
-    ptype, author = pagetype_and_author(body)
     return {
         "envelope":      page["envelope"],
         "page":          page["page"],
         "date":          page["date"],
         "author":        author,
-        "pagetype":      ptype,
+        "pagetype":      "lined" if "lined" in body else "manuscript",
         "stamp":         False,
         "translated_by": "",
         "body":          body,
@@ -35,8 +27,16 @@ flat_pages = []
 current_date = None
 current = None
 capture_paired = False  # True when the very next non-empty line is a paired_with ref
+boy_page = True
+switch_to_sensei = False  # defer author switch until after current page is finalized
 
 for line in SRC.read_text(encoding="utf-8").splitlines():
+    if "Greetings" in line or "拝啓" in line:
+        boy_page = True
+        switch_to_sensei = False
+    if "Sincerely" in line or "敬具" in line:
+        switch_to_sensei = True  # switch AFTER the current page is finalized
+
     # Capture the line immediately after a 29-N entry as its paired reference
     if capture_paired and line.strip():
         current["paired_with"] = line.strip()
@@ -47,12 +47,16 @@ for line in SRC.read_text(encoding="utf-8").splitlines():
         current_date = m.group(1).strip()
         continue
 
-    if m := STAMP_RE.match(line):
+    # Captures the page this page belongs to
+    if m := PAGE_RE.match(line):
         env_num = int(m.group(1))
         page_id = f"{m.group(1)}-{m.group(2)}"
 
         if current:
-            flat_pages.append(finalize(current))
+            flat_pages.append(finalize(current, "boy" if boy_page else "sensei"))
+            if switch_to_sensei:
+                boy_page = False
+                switch_to_sensei = False
 
         current = {
             "envelope": env_num,
@@ -69,7 +73,7 @@ for line in SRC.read_text(encoding="utf-8").splitlines():
         current["body"] += line + "\n"
 
 if current:
-    flat_pages.append(finalize(current))
+    flat_pages.append(finalize(current, "boy" if boy_page else "sensei"))
 
 # Group by envelope
 grouped = defaultdict(list)

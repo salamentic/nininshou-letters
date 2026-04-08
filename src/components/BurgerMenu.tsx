@@ -2,23 +2,39 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages } from '@/lib/parseLetters';
 
-export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount }) {
-  const [open, setOpen] = useState(false);
-  const [expandedEnvelope, setExpandedEnvelope] = useState(null);
+interface Props {
+  currentEnvelope: number;
+  onSelect: (index: number) => void;
+  onPageSelect: (selection: { envelopeIndex: number; pageIndex: number }) => void;
+  onOpen?: () => void;
+  envelopeCount: number;
+}
 
-  const handleEnvelopeClick = (i) => {
+export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount }: Props) {
+  const [open, setOpen] = useState(false);
+  const [expandedEnvelope, setExpandedEnvelope] = useState<number | null>(null);
+
+  const handleEnvelopeClick = (i: number) => {
     onSelect(i);
     setExpandedEnvelope(expandedEnvelope === i ? null : i);
   };
 
-  const handlePageClick = (envelopeIndex, pageIndex) => {
+  const handlePageClick = (envelopeIndex: number, pageIndex: number) => {
     onPageSelect({ envelopeIndex, pageIndex });
     setOpen(false);
   };
 
   return (
     <>
-      <button style={styles.burger} onClick={() => { setOpen(o => { if (!o) onOpen?.(); return !o; }); }} aria-label="Menu">
+      <button
+        style={styles.burger}
+        onClick={() => {
+          setOpen(o => {
+            if (!o) setTimeout(() => onOpen?.(), 0);
+            return !o;
+          });
+        }}
+      >
         <motion.span animate={{ rotate: open ? 45 : 0, y: open ? 7 : 0 }} style={styles.bar} />
         <motion.span animate={{ opacity: open ? 0 : 1 }} style={styles.bar} />
         <motion.span animate={{ rotate: open ? -45 : 0, y: open ? -7 : 0 }} style={styles.bar} />
@@ -57,7 +73,9 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
                         <motion.span
                           animate={{ rotate: isExpanded ? 90 : 0 }}
                           style={styles.chevron}
-                        >›</motion.span>
+                        >
+                          ›
+                        </motion.span>
                       )}
                     </button>
 
@@ -92,7 +110,7 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   burger: {
     position: 'fixed',
     top: 20,

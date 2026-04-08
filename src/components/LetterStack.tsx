@@ -1,7 +1,8 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo } from "react";
-import { motion, useScroll } from "framer-motion";
-import { getEnvelopePages, getEnvelopeDate, Letter } from '@/lib/parseLetters';
+import { motion, useScroll } from 'motion/react';
+import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
+import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
@@ -31,7 +32,10 @@ function LetterPage({ page, i, current, total, setPageRef }: {
 
   const bodyStyle: React.CSSProperties = {
     ...styles.body,
-    color: page.author === 'sensei' ? '#c0392b' : '#1a1a1a',
+    color: page.author === 'sensei' ? '#c0392b' : '#5a4a3a',
+    fontFamily: page.author !== 'sensei' ? '"Indie Flower", cursive' : '"Cookie", cursive',
+    fontSize: page.author === 'sensei' ? 18 : 14,
+    lineHeight: page.author === 'sensei' ? '26px' : 1.85,
     ...(page.pagetype === 'lined' ? styles.linedBody : {}),
   };
 
@@ -49,7 +53,7 @@ function LetterPage({ page, i, current, total, setPageRef }: {
       <p style={styles.label}>{page.page}</p>
       {page.segments
         ? page.segments.map((seg, j) => (
-            <p key={j} style={{ ...styles.body, color: seg.author === 'sensei' ? '#c0392b' : '#1a1a1a', ...(page.pagetype === 'lined' ? styles.linedBody : {}) }}>
+            <p key={j} style={{ ...styles.body, color: seg.author === 'sensei' ? '#c0392b' : '#5a4a3a', ...(page.pagetype === 'lined' ? styles.linedBody : {}) }}>
               {seg.text}
             </p>
           ))
@@ -92,6 +96,8 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
   const accumRef = useRef(0);
   const lastFlipTime = useRef(0);
   const dirRef = useRef<1 | -1>(1);
+  const prevCanScrollRef = useRef(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const envelopeDate = getEnvelopeDate(number);
 
   // Scroll the incoming page to the correct end based on navigation direction
@@ -108,23 +114,38 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
     const onWheel = (e: WheelEvent) => {
       if (!modalRef.current?.contains(e.target as Node)) return;
 
-      // If a scrollable child has room, let it scroll and reset accumulation
+      // If a scrollable child has room, let it scroll
       let node = e.target as HTMLElement | null;
+      let childCanScroll = false;
       while (node && node !== el) {
         const oy = window.getComputedStyle(node).overflowY;
         if (oy === 'auto' || oy === 'scroll') {
-          const canScroll = e.deltaY > 0
-            ? node.scrollTop < node.scrollHeight - node.clientHeight
+          const scrollable = e.deltaY > 0
+            ? node.scrollTop < node.scrollHeight - node.clientHeight - 1
             : node.scrollTop > 0;
-          if (canScroll) {
-            accumRef.current = 0;
-            return;
-          }
+          if (scrollable) { childCanScroll = true; break; }
         }
         node = node.parentElement;
       }
 
+      if (childCanScroll) {
+        prevCanScrollRef.current = true;
+        accumRef.current = 0;
+        return;
+      }
+
+      // Transitioning from scrollable → not-scrollable: absorb the carry-over momentum
+      if (prevCanScrollRef.current) {
+        prevCanScrollRef.current = false;
+        accumRef.current = 0;
+        return;
+      }
+
       e.preventDefault();
+
+      // Drain accumulator if scroll has been idle for 200ms
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => { accumRef.current = 0; }, 200);
 
       const now = Date.now();
       if (now - lastFlipTime.current < 700) return;
@@ -132,12 +153,12 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
       accumRef.current += e.deltaY;
 
       if (accumRef.current > 150) {
-        accumRef.current = 0;
+        accumRef.current = -60; // absorb residual momentum in opposite direction
         lastFlipTime.current = now;
         dirRef.current = 1;
         setCurrent(c => Math.min(c + 1, pages.length - 1));
       } else if (accumRef.current < -150) {
-        accumRef.current = 0;
+        accumRef.current = 60;
         lastFlipTime.current = now;
         dirRef.current = -1;
         setCurrent(c => Math.max(c - 1, 0));
@@ -145,7 +166,10 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
     };
 
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
   }, [open, pages.length]);
 
   if (!open) return null;
@@ -189,14 +213,14 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
 const styles: Record<string, React.CSSProperties> = {
   overlay:     { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
   modal:       { background: '#fff', borderRadius: 12, width: '80vw', height: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-  header:      { padding: '14px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14, fontWeight: 500 },
+  header:      { padding: '14px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
   page:        { position: 'absolute', inset: 0, padding: '0 32px 28px', transformOrigin: 'top left', overflowY: 'auto', background: '#fff' },
   manuscript:  { background: 'radial-gradient(ellipse at 20% 30%, #c8a96e22 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, #a0784422 0%, transparent 50%), #f5e6c8' } as React.CSSProperties,
   linedBody:   { backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0px, transparent 25px, #b8cfe8 25px, #b8cfe8 26px)', backgroundSize: '100% 26px', backgroundClip: 'padding-box' } as React.CSSProperties,
   progressBar: { position: 'sticky', top: 0, left: '-32px', right: '-32px', height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { fontSize: 12, color: '#999', marginBottom: 16 },
-  body:        { fontFamily: 'Georgia, serif', fontSize: 14, lineHeight: 1.85, whiteSpace: 'pre-line' },
+  body:        { fontFamily: 'Indie Flower, cursive', fontSize: 14, lineHeight: 1.85, whiteSpace: 'pre-line' },
   footer:      { padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
   navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
   dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },

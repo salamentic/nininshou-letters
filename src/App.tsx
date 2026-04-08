@@ -1,20 +1,30 @@
 import { useState, useMemo } from 'react';
-import "./styles.css";
-import Envelope from './components/Envelope.jsx';
-import EnvelopeStackScrollable from './components/EnvelopeStackScrollable.jsx';
-import BurgerMenu from './components/BurgerMenu.jsx';
-import SpotifyPlayer from './components/SpotifyPlayer.jsx';
-import data from './assets/nininshou.json';
+import useSound from 'use-sound';
+import envelopeSound from './assets/envelope.wav';
+import './styles.css';
+import Envelope from './components/Envelope';
+import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
+import BurgerMenu from './components/BurgerMenu';
+import SpotifyPlayer from './components/SpotifyPlayer';
+import spotifyData from './assets/spotify_embeds.json';
 
 const ENVELOPE_COUNT = 32;
 
 export default function App() {
   const [currentEnvelope, setCurrentEnvelope] = useState(0);
-  const spotifyLink = useMemo(() => data[currentEnvelope]?.spotify_embed || null, [currentEnvelope]);
-  const [triggerPage, setTriggerPage] = useState(null);
+  const spotifyLink = useMemo(
+    () => (spotifyData as Record<string, string>)[currentEnvelope] ?? null,
+    [currentEnvelope]
+  );
+  const [triggerPage, setTriggerPage] = useState<{
+    envelopeIndex: number;
+    pageIndex: number;
+    ts: number;
+  } | null>(null);
   const [closeSignal, setCloseSignal] = useState(0);
+  const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
 
-  const handlePageSelect = ({ envelopeIndex, pageIndex }) => {
+  const handlePageSelect = ({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
     setCurrentEnvelope(envelopeIndex);
     setTriggerPage({ envelopeIndex, pageIndex, ts: Date.now() });
   };
@@ -25,7 +35,7 @@ export default function App() {
         currentEnvelope={currentEnvelope}
         onSelect={setCurrentEnvelope}
         onPageSelect={handlePageSelect}
-        onOpen={() => setCloseSignal(s => s + 1)}
+        onOpen={() => { playEnvelopeSound(); setCloseSignal(s => s + 1); }}
         envelopeCount={ENVELOPE_COUNT}
       />
       <EnvelopeStackScrollable
@@ -59,7 +69,7 @@ export default function App() {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   tabs: {
     position: 'fixed',
     bottom: 24,

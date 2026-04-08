@@ -26,7 +26,6 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
   const cardHeight = 300;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollY = useMotionValue(0);
@@ -234,16 +233,12 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
               data-active={isActive}
               initial={false}
               key={`scrollable-card-${i}`}
-              onBlur={() => setHoveredIndex(null)}
-              onFocus={() => isActive && setHoveredIndex(i)}
-              onMouseEnter={() => isActive && setHoveredIndex(i)}
-              onMouseLeave={() => setHoveredIndex(null)}
               style={{
                 height: `${cardHeight}px`,
                 zIndex: transform.zIndex,
                 pointerEvents: isActive ? "auto" : "none",
                 transformOrigin: "center center",
-                willChange: shouldReduceMotion ? undefined : "opacity, filter, transform",
+                willChange: (!shouldReduceMotion && Math.abs(i - currentIndex) <= 2) ? "opacity, filter, transform" : undefined,
                 filter: `blur(${transform.blur}px)`,
                 opacity: transform.opacity,
                 transitionProperty: shouldReduceMotion ? "none" : "opacity, filter",
