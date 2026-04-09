@@ -13,16 +13,16 @@ interface Props {
   initialPage?: number;
 }
 
-function LetterPage({ page, i, current, total, setPageRef }: {
+function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
   page: Letter;
   i: number;
   current: number;
   total: number;
   setPageRef: (el: HTMLDivElement | null) => void;
+  onFlip: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ container: ref });
-  const [play] = useSound(boopSfx, { volume: 0.05 });
 
   const pageStyle: React.CSSProperties = {
     ...styles.page,
@@ -45,7 +45,7 @@ function LetterPage({ page, i, current, total, setPageRef }: {
         (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
         setPageRef(el);
       }}
-      animate={pageAnimate(i, current, play)}
+      animate={pageAnimate(i, current, onFlip)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
       style={pageStyle}
     >
@@ -79,6 +79,7 @@ function pageAnimate(i: number, current: number, soundFn: () => void) {
 export default function LetterStack({ open, onClose, number, initialPage = 0 }: Props) {
   const pages = useMemo(() => getEnvelopePages(number), [number]);
   const [current, setCurrent] = useState(initialPage);
+  const [playFlip] = useSound(boopSfx, { volume: 0.05 });
 
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
   useEffect(() => {
@@ -176,7 +177,7 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
 
   return createPortal(
     <div style={styles.overlay} onClick={onClose}>
-      <div ref={modalRef} style={styles.modal} onClick={e => e.stopPropagation()}>
+      <div ref={modalRef} style={{ ...styles.modal, position: 'relative' }} onClick={e => e.stopPropagation()}>
 
         <div style={styles.header}>
           <span>Envelope {number} {envelopeDate}</span>
@@ -192,10 +193,12 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
               current={current}
               total={pages.length}
               setPageRef={el => { pageRefs.current[i] = el; }}
+              onFlip={playFlip}
             />
           ))}
         </div>
 
+        <img src="/flower.png" alt="" style={styles.cornerIcon} />
         <div style={styles.footer}>
           <button style={styles.navBtn} onClick={() => setCurrent(c => Math.max(c - 1, 0))} disabled={current === 0}>‹</button>
           {pages.map((_, i) => (
@@ -222,6 +225,7 @@ const styles: Record<string, React.CSSProperties> = {
   label:       { fontSize: 12, color: '#999', marginBottom: 16 },
   body:        { fontFamily: 'Indie Flower, cursive', fontSize: 14, lineHeight: 1.85, whiteSpace: 'pre-line' },
   footer:      { padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
+  cornerIcon:  { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, pointerEvents: 'none' },
   navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
   dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },
 };
