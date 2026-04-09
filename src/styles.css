@@ -15,6 +15,7 @@ body {
     align-items: center;
     font-family: sans-serif;
     flex-direction: column;
+    background-color: #f5e6c8;
 }
 
 #root{
@@ -26,6 +27,19 @@ body {
     font-family: sans-serif;
     background-repeat: no-repeat;
     flex-direction: column;
+}
+
+.envelope-date {
+  position: absolute;
+  top: calc(50% + 36px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-family: 'Caveat', cursive;
+  color: #5a4a3a;
+  opacity: 0.5;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .envelope-number {
@@ -64,9 +78,13 @@ body {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  box-shadow: 0 0 1px rgba(0,0,0,0.2), inset 0 0 1px rgba(0,0,0,0.2);
   font-size: 28px;
 }
+
+[data-active="false"] .envelope {
+  box-shadow: 0 -6px 6px -4px rgba(0,0,0,0.2);
+}
+
 
 .card {
   position: relative;

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import useSound from 'use-sound';
 import envelopeSound from './assets/envelope.wav';
+import flipSound from './assets/flip.wav';
 import './styles.css';
 import Envelope from './components/Envelope';
 import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
@@ -24,24 +25,46 @@ export default function App() {
   } | null>(null);
   const [closeSignal, setCloseSignal] = useState(0);
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
+  // Preload flip sound so it's cached before any letter is opened
+  useSound(flipSound, { volume: 0.05 });
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/nininshou_table_0.png';
+    Promise.all([document.fonts.ready, img.decode()]).then(() => setReady(true));
+  }, []);
 
   const handlePageSelect = ({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
     setCurrentEnvelope(envelopeIndex);
     setTriggerPage({ envelopeIndex, pageIndex, ts: Date.now() });
   };
 
-  // Preload neighbours so they're cached before the user gets there
-  useEffect(() => {
-    [-2, -1, 1, 2].forEach(offset => {
-      const idx = currentEnvelope + offset;
-      if (idx >= 0 && idx < ENVELOPE_COUNT) {
-        new Image().src = `/nininshou_table_${idx}.png`;
-      }
-    });
-  }, [currentEnvelope]);
-
   return (
-    <div style={{ position: 'relative' }}>
+    <>
+      <AnimatePresence>
+        {!ready && (
+          <motion.div
+            key="splash"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              background: '#f5e6c8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: '"Cookie", cursive',
+              fontSize: 32,
+              color: '#5a4a3a',
+            }}
+          >
+            二人称
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         <motion.div
           key={currentEnvelope}
@@ -70,6 +93,7 @@ export default function App() {
       <EnvelopeStackScrollable
         selectedIndex={currentEnvelope}
         onIndexChange={setCurrentEnvelope}
+        className="translate-y-[9vh]"
       >
         {Array.from({ length: ENVELOPE_COUNT }, (_, i) => (
           <Envelope
@@ -77,6 +101,7 @@ export default function App() {
             number={i + 1}
             triggerPage={triggerPage?.envelopeIndex === i ? triggerPage : null}
             closeSignal={closeSignal}
+            onPlaySound={playEnvelopeSound}
           />
         ))}
       </EnvelopeStackScrollable>
@@ -94,7 +119,7 @@ export default function App() {
           </button>
         ))}
       </nav>
-    </div>
+    </>
   );
 }
 

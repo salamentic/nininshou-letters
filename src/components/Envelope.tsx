@@ -1,23 +1,22 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import useSound from 'use-sound';
 import envelopeImg from '@/assets/sample_envelope.png';
 import envelopeImgBack from '@/assets/sample_envelope_back.png';
-import envelopeSound from '@/assets/envelope.wav';
 import LetterStack from '@/components/LetterStack';
+import { getEnvelopeDate } from '@/lib/parseLetters';
 
 interface Props {
   number: number;
   triggerPage: { envelopeIndex: number; pageIndex: number; ts: number } | null;
   closeSignal: number;
+  onPlaySound: () => void;
 }
 
-const Envelope = ({ number, triggerPage, closeSignal }: Props) => {
+const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
   const [flipped, setFlipped] = useState(false);
   const [open, setOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [initialPage, setInitialPage] = useState(0);
-  const [play] = useSound(envelopeSound, { volume: 0.5 });
 
   useEffect(() => {
     if (!closeSignal) return;
@@ -28,7 +27,7 @@ const Envelope = ({ number, triggerPage, closeSignal }: Props) => {
 
   useEffect(() => {
     if (triggerPage == null) return;
-    play();
+    onPlaySound();
     setInitialPage(triggerPage.pageIndex);
     setFlipped(true);
     setOpen(true);
@@ -41,7 +40,7 @@ const Envelope = ({ number, triggerPage, closeSignal }: Props) => {
 
   const openLetterModal = () => {
     if (flipped && !open) {
-      play();
+      onPlaySound();
       setInitialPage(0);
       setOpen(true);
       setTimeout(() => setModalOpen(true), 500);
@@ -60,6 +59,7 @@ const Envelope = ({ number, triggerPage, closeSignal }: Props) => {
         <div className="face front">
           <div className="envelope" style={{ backgroundImage: `url(${envelopeImg})` }} />
           <span className="envelope-number">{number}</span>
+          <span className="envelope-date">{getEnvelopeDate(number)}</span>
         </div>
         <div className="face back" onClick={openLetterModal}>
           <div className="envelope" style={{ backgroundImage: `url(${envelopeImgBack})` }}>
@@ -88,4 +88,4 @@ const Envelope = ({ number, triggerPage, closeSignal }: Props) => {
   );
 };
 
-export default Envelope;
+export default memo(Envelope);

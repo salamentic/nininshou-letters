@@ -31,5 +31,5 @@ export function getEnvelopePages(number: number): Letter[] {
 
 export function getEnvelopeDate(number: number): string {
   const envelope = (data as Envelope[]).find(e => e.envelope === number);
-  return envelope?.date ?? "";
+  return envelope?.pages.find(p => p.date)?.date ?? "";
 }
