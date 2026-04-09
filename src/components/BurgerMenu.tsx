@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages } from '@/lib/parseLetters';
 
@@ -13,6 +13,10 @@ interface Props {
 export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount }: Props) {
   const [open, setOpen] = useState(false);
   const [expandedEnvelope, setExpandedEnvelope] = useState<number | null>(null);
+  const allPages = useMemo(
+    () => Array.from({ length: envelopeCount }, (_, i) => getEnvelopePages(i + 1)),
+    [envelopeCount]
+  );
 
   const handleEnvelopeClick = (i: number) => {
     onSelect(i);
@@ -59,7 +63,7 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
             >
               <p style={styles.heading}>Envelopes</p>
               {Array.from({ length: envelopeCount }, (_, i) => {
-                const pages = getEnvelopePages(i + 1);
+                const pages = allPages[i];
                 const isExpanded = expandedEnvelope === i;
 
                 return (
