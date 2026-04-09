@@ -7,8 +7,8 @@ const SCROLL_TIMEOUT_OFFSET = 100;
 const MIN_SCROLL_INTERVAL = 300;
 const SCROLL_THRESHOLD = 20;
 const TOUCH_SCROLL_THRESHOLD = 100;
-const SCALE_FACTOR = 0.08;
-const MIN_SCALE = 0.08;
+const SCALE_FACTOR = 0.04;
+const MIN_SCALE = 0.5;
 const MAX_SCALE = 2;
 const HOVER_SCALE_MULTIPLIER = 1.02;
 const CARD_PADDING = 100;
@@ -27,6 +27,7 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const isScrollingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollY = useMotionValue(0);
   const lastScrollTime = useRef(0);
@@ -35,8 +36,8 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
   const totalItems = items.length;
   const maxIndex = totalItems - 1;
 
-  const FRAME_OFFSET = -30;
-  const FRAMES_VISIBLE_LENGTH = 3;
+  const FRAME_OFFSET = -9;
+  const FRAMES_VISIBLE_LENGTH = 4;
   const SNAP_DISTANCE = 50;
 
   const clamp = useCallback(
@@ -47,7 +48,7 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
 
   const scrollToCard = useCallback(
     (direction: 1 | -1) => {
-      if (isScrolling) return;
+      if (isScrollingRef.current) return;
 
       const now = Date.now();
       if (now - lastScrollTime.current < MIN_SCROLL_INTERVAL) return;
@@ -56,24 +57,26 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
 
       if (newIndex !== currentIndex) {
         lastScrollTime.current = now;
+        isScrollingRef.current = true;
         setIsScrolling(true);
         setCurrentIndex(newIndex);
         scrollY.set(newIndex * SNAP_DISTANCE);
         setTimeout(() => {
+          isScrollingRef.current = false;
           setIsScrolling(false);
         }, transitionDuration + SCROLL_TIMEOUT_OFFSET);
       }
     },
-    [currentIndex, maxIndex, scrollY, isScrolling, transitionDuration, clamp]
+    [currentIndex, maxIndex, scrollY, transitionDuration, clamp]
   );
 
   const handleScroll = useCallback(
     (deltaY: number) => {
-      if (isDragging || isScrolling) return;
+      if (isDragging || isScrollingRef.current) return;
       if (Math.abs(deltaY) < SCROLL_THRESHOLD) return;
       scrollToCard(deltaY > 0 ? 1 : -1);
     },
-    [isDragging, isScrolling, scrollToCard]
+    [isDragging, scrollToCard]
   );
 
   const handleWheel = useCallback(
@@ -182,10 +185,10 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
       const isBehindCurrent = currentIndex > index;
 
       return {
-        y: shouldReduceMotion ? 0 : clamp(offsetIndex * FRAME_OFFSET, [FRAME_OFFSET * FRAMES_VISIBLE_LENGTH, Number.POSITIVE_INFINITY]),
-        scale: shouldReduceMotion ? 1 : clamp(1 - offsetIndex * SCALE_FACTOR, [MIN_SCALE, MAX_SCALE]),
+        y:      shouldReduceMotion ? 0 : clamp(offsetIndex * FRAME_OFFSET, [FRAME_OFFSET * FRAMES_VISIBLE_LENGTH, Number.POSITIVE_INFINITY]),
+        scale:  1,
         opacity: currentIndex > index ? 0 : 1,
-        blur: !shouldReduceMotion && isBehindCurrent ? 2 : 0,
+        blur:   0,
         zIndex: items.length - index,
       };
     },
@@ -226,7 +229,7 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
               animate={
                 shouldReduceMotion
                   ? { x: "-50%" }
-                  : { y: `calc(-50% + ${transform.y}px)`, scale: transform.scale, x: "-50%" }
+                  : { y: `calc(-50% + ${transform.y}px)`, scale: transform.scale, x: "-50%", rotate: isActive ? -2 : 0 }
               }
               aria-hidden={!isActive}
               className="absolute top-1/2 left-1/2"
