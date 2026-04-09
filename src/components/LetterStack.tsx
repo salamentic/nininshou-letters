@@ -1,13 +1,12 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo } from "react";
-import { motion, useScroll } from 'motion/react';
+import { motion, AnimatePresence, useScroll } from 'motion/react';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
 interface Props {
-  open: boolean;
   onClose: () => void;
   number: number;
   initialPage?: number;
@@ -76,30 +75,40 @@ function pageAnimate(i: number, current: number, soundFn: () => void) {
   };
 }
 
-export default function LetterStack({ open, onClose, number, initialPage = 0 }: Props) {
+export default function LetterStack({ onClose, number, initialPage = 0 }: Props) {
   const pages = useMemo(() => getEnvelopePages(number), [number]);
   const [current, setCurrent] = useState(initialPage);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
 
-  useEffect(() => { setCurrent(initialPage); }, [initialPage]);
-  useEffect(() => {
-        const close = (e: KeyboardEvent) => {
-          if(e.keyCode === 27){
-            onClose();
-          }
-        }
-        window.addEventListener('keydown', close)
-      return () => window.removeEventListener('keydown', close)
-    },[])
-
   const modalRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dirRef = useRef<1 | -1>(1);
   const accumRef = useRef(0);
   const lastFlipTime = useRef(0);
-  const dirRef = useRef<1 | -1>(1);
   const prevCanScrollRef = useRef(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const envelopeDate = getEnvelopeDate(number);
+
+  useEffect(() => { setCurrent(initialPage); }, [initialPage]);
+  useEffect(() => { modalRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        dirRef.current = 1;
+        setCurrent(c => Math.min(c + 1, pages.length - 1));
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        dirRef.current = -1;
+        setCurrent(c => Math.max(c - 1, 0));
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, pages.length]);
 
   // Scroll the incoming page to the correct end based on navigation direction
   useEffect(() => {
@@ -109,7 +118,6 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
   }, [current]);
 
   useEffect(() => {
-    if (!open) return;
     const el = modalRef.current!;
 
     const onWheel = (e: WheelEvent) => {
@@ -154,7 +162,7 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
       accumRef.current += e.deltaY;
 
       if (accumRef.current > 150) {
-        accumRef.current = -60; // absorb residual momentum in opposite direction
+        accumRef.current = -60;
         lastFlipTime.current = now;
         dirRef.current = 1;
         setCurrent(c => Math.min(c + 1, pages.length - 1));
@@ -171,44 +179,65 @@ export default function LetterStack({ open, onClose, number, initialPage = 0 }: 
       el.removeEventListener('wheel', onWheel);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  }, [open, pages.length]);
-
-  if (!open) return null;
+  }, [pages.length]);
 
   return createPortal(
-    <div style={styles.overlay} onClick={onClose}>
-      <div ref={modalRef} style={{ ...styles.modal, position: 'relative' }} onClick={e => e.stopPropagation()}>
+    <motion.div
+      style={styles.overlay}
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+    >
+      <motion.div
+        ref={modalRef}
+        role="dialog"
+        tabIndex={-1}
+        style={{ ...styles.modal, position: 'relative' }}
+        onClick={e => e.stopPropagation()}
+        initial={{ scaleX: 0, scaleY: 0.005 }}
+        animate={{ scaleX: [0, 1, 1], scaleY: [0.005, 0.005, 1] }}
+        exit={{ scaleX: [1, 1, 0], scaleY: [1, 0.005, 0.005] }}
+        transition={{ duration: 0.6, times: [0, 0.5, 1], ease: [0.165, 0.84, 0.44, 1] }}
+      >
+        <motion.div
+          style={{ display: 'contents' }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2, delay: 0.45 }}
+        >
+          <div style={styles.header}>
+            <span>Envelope {number} {envelopeDate}</span>
+            <button onClick={onClose}>✕</button>
+          </div>
 
-        <div style={styles.header}>
-          <span>Envelope {number} {envelopeDate}</span>
-          <button onClick={onClose}>✕</button>
-        </div>
+          <div style={styles.stack}>
+            {pages.map((page, i) => (
+              <LetterPage
+                key={page.page}
+                page={page}
+                i={i}
+                current={current}
+                total={pages.length}
+                setPageRef={el => { pageRefs.current[i] = el; }}
+                onFlip={playFlip}
+              />
+            ))}
+          </div>
 
-        <div style={styles.stack}>
-          {pages.map((page, i) => (
-            <LetterPage
-              key={page.page}
-              page={page}
-              i={i}
-              current={current}
-              total={pages.length}
-              setPageRef={el => { pageRefs.current[i] = el; }}
-              onFlip={playFlip}
-            />
-          ))}
-        </div>
-
-        <img src="/flower.png" alt="" style={styles.cornerIcon} />
-        <div style={styles.footer}>
-          <button style={styles.navBtn} onClick={() => setCurrent(c => Math.max(c - 1, 0))} disabled={current === 0}>‹</button>
-          {pages.map((_, i) => (
-            <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
-          ))}
-          <button style={styles.navBtn} onClick={() => setCurrent(c => Math.min(c + 1, pages.length - 1))} disabled={current === pages.length - 1}>›</button>
-        </div>
-
-      </div>
-    </div>,
+          <img src="/flower.png" alt="" style={styles.cornerIcon} />
+          <div style={styles.footer}>
+            <button style={styles.navBtn} onClick={() => { dirRef.current = -1; setCurrent(c => Math.max(c - 1, 0)); }} disabled={current === 0}>‹</button>
+            {pages.map((_, i) => (
+              <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
+            ))}
+            <button style={styles.navBtn} onClick={() => { dirRef.current = 1; setCurrent(c => Math.min(c + 1, pages.length - 1)); }} disabled={current === pages.length - 1}>›</button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>,
     document.body
   );
 }

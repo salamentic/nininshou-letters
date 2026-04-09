@@ -1,5 +1,5 @@
 import { memo, useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import envelopeImg from '@/assets/sample_envelope.png';
 import envelopeImgBack from '@/assets/sample_envelope_back.png';
 import LetterStack from '@/components/LetterStack';
@@ -71,18 +71,19 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
             />
           </div>
         </div>
-        {modalOpen && (
-          <LetterStack
-            open={modalOpen}
-            onClose={() => {
-              setModalOpen(false);
-              setOpen(false);
-              setTimeout(() => setFlipped(false), 300);
-            }}
-            number={number}
-            initialPage={initialPage}
-          />
-        )}
+        <AnimatePresence>
+          {modalOpen && (
+            <LetterStack
+              onClose={() => {
+                setModalOpen(false);
+                setOpen(false);
+                setTimeout(() => setFlipped(false), 700);
+              }}
+              number={number}
+              initialPage={initialPage}
+            />
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );
