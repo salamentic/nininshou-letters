@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from collections import defaultdict
 
+#TODO: Make parsing 29-X pages possible
 SRC = Path(__file__).parent.parent / "src/assets/nininshou.txt"
 OUT = Path(__file__).parent.parent / "src/assets/nininshou.json"
 
