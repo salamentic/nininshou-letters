@@ -40,6 +40,23 @@ export default function App() {
     setTriggerPage({ envelopeIndex, pageIndex, ts: Date.now() });
   };
 
+  const navigate = (direction: 'previous' | 'next') => {
+    setCurrentEnvelope(prev => {
+      if (direction === 'previous') return Math.max(0, prev - 1);
+      if (direction === 'next') return Math.min(ENVELOPE_COUNT - 1, prev + 1);
+      return prev;
+    });
+  };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft')  navigate('previous');
+      if (e.key === 'ArrowRight') navigate('next');
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []); // navigate is stable since it only calls setCurrentEnvelope
+
   return (
     <>
       <AnimatePresence>
@@ -119,6 +136,42 @@ export default function App() {
           </button>
         ))}
       </nav>
+        {/* Left Arrow */}
+        {currentEnvelope > 0 && (
+          <button
+            onClick={() => navigate('previous')}
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-50
+                      w-10 h-10 flex items-center justify-center
+                      rounded-full
+                      bg-[rgba(255,255,255,0.92)]/70 hover:bg-[rgba(255,255,255,0.92)]
+                      text-[#5a4a3a] text-xl
+                      shadow-md hover:shadow-lg
+                      backdrop-blur-sm
+                      transition-all duration-200
+                      border border-[#c4a882]/40"
+            aria-label="Previous envelope"
+          >
+            ‹
+          </button>
+        )}
+         {/* Right Arrow */}
+        {currentEnvelope < ENVELOPE_COUNT - 1 && (
+          <button
+            onClick={() => navigate('next')}
+            className="fixed right-4 top-1/2 -translate-y-1/2 z-50
+                      w-10 h-10 flex items-center justify-center
+                      rounded-full
+                      bg-[rgba(255,255,255,0.92)]/70 hover:bg-[rgba(255,255,255,0.92)]
+                      text-[#5a4a3a] text-xl
+                      shadow-md hover:shadow-lg
+                      backdrop-blur-sm
+                      transition-all duration-200
+                      border border-[#c4a882]/40"
+            aria-label="Next envelope"
+          >
+            ›
+          </button>
+        )}
     </>
   );
 }
