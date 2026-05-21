@@ -122,6 +122,67 @@ body {
   align-items: center;
 }
 
+/* ── Letter page content ── */
+.letter-content {
+  line-height: 26px;
+  white-space: pre-line;
+}
+
+.letter-content.lined {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 25px,
+    #b8cfe8 25px,
+    #b8cfe8 26px
+  );
+  background-size: 100% 26px;
+}
+
+.letter-content p {
+  margin: 0;
+}
+
+.letter-content p.boy {
+  font-family: 'Indie Flower', cursive;
+  font-size: 14px;
+  color: #5a4a3a;
+}
+
+.letter-content p.sensei {
+  font-family: 'Cookie', cursive;
+  font-size: 18px;
+  color: #c0392b;
+}
+
+.letter-content .strikethrough {
+  text-decoration: line-through;
+}
+
+.letter-content .underline {
+  text-decoration: underline;
+}
+
+.letter-content .scribble {
+  display: inline-block;
+  transform: rotate(-1.5deg);
+  opacity: 0.75;
+}
+
+.letter-content .annotation {
+  font-family: 'Indie Flower', cursive;
+  font-size: 11px;
+  opacity: 0.65;
+  display: block;
+}
+
+.letter-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 4px 0;
+}
+
 .flap {
   position: absolute;
   top: 0;

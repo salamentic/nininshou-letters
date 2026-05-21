@@ -5,45 +5,8 @@ import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
-import { prepare, layout } from '@chenglou/pretext';
 
-const LINED_LH = 26;
-
-function LinedParagraph({ text, fontSize, fontFamily, color }: {
-  text: string; fontSize: number; fontFamily: string; color: string;
-}) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const width = el.clientWidth;
-    if (!width) return;
-    const prepared = prepare(text, `${fontSize}px ${fontFamily}`, { whiteSpace: 'pre-wrap' });
-    const result = layout(prepared, width, LINED_LH);
-    setMeasuredHeight(result.height);
-  }, [text, fontSize, fontFamily]);
-
-  return (
-    <p
-      ref={ref}
-      style={{
-        fontFamily,
-        fontSize,
-        color,
-        lineHeight: `${LINED_LH}px`,
-        whiteSpace: 'pre-line',
-        margin: 0,
-        height: measuredHeight !== null ? `${measuredHeight}px` : 'auto',
-        backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent ${LINED_LH - 1}px, #b8cfe8 ${LINED_LH - 1}px, #b8cfe8 ${LINED_LH}px)`,
-        backgroundSize: `100% ${LINED_LH}px`,
-      }}
-    >
-      {text}
-    </p>
-  );
-}
+const htmlCache = new Map<string, string>();
 
 interface Props {
   onClose: () => void;
@@ -61,21 +24,19 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ container: ref });
+  const [html, setHtml] = useState<string | null>(htmlCache.get(page.page) ?? null);
 
-  const pageStyle: React.CSSProperties = {
-    ...styles.page,
-    zIndex: total - i,
-    ...(page.pagetype === 'manuscript' ? styles.manuscript : {}),
-  };
-
-  const bodyStyle: React.CSSProperties = {
-    ...styles.body,
-    color: page.author === 'sensei' ? '#c0392b' : '#5a4a3a',
-    fontFamily: page.author !== 'sensei' ? '"Indie Flower", cursive' : '"Cookie", cursive',
-    fontSize: page.author === 'sensei' ? 18 : 14,
-    lineHeight: page.author === 'sensei' ? '26px' : 1.85,
-    ...(page.pagetype === 'lined' ? styles.linedBody : {}),
-  };
+  useEffect(() => {
+    if (htmlCache.has(page.page)) { setHtml(htmlCache.get(page.page)!); return; }
+    fetch(`/letters/${page.page}.html`)
+      .then(r => r.ok ? r.text() : Promise.reject())
+      .then(text => { htmlCache.set(page.page, text); setHtml(text); })
+      .catch(() => {
+        const fallback = `<p class="${page.author === 'sensei' ? 'sensei' : 'boy'}">${page.body ?? ''}</p>`;
+        htmlCache.set(page.page, fallback);
+        setHtml(fallback);
+      });
+  }, [page.page]);
 
   return (
     <motion.div
@@ -85,26 +46,14 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       }}
       animate={pageAnimate(i, current, onFlip)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
-      style={pageStyle}
+      style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}) }}
     >
       <motion.div style={{ ...styles.progressBar, scaleX: scrollYProgress }} />
       <p style={styles.label}>{page.page}</p>
-      {page.segments
-        ? page.segments.map((seg, j) => {
-            const segColor = seg.author === 'sensei' ? '#c0392b' : '#5a4a3a';
-            return page.pagetype === 'lined'
-              ? <LinedParagraph key={j} text={seg.text} fontSize={14} fontFamily='"Indie Flower", cursive' color={segColor} />
-              : <p key={j} style={{ ...styles.body, color: segColor }}>{seg.text}</p>;
-          })
-        : page.pagetype === 'lined'
-          ? <LinedParagraph
-              text={page.body}
-              fontSize={page.author === 'sensei' ? 18 : 14}
-              fontFamily={page.author !== 'sensei' ? '"Indie Flower", cursive' : '"Cookie", cursive'}
-              color={page.author === 'sensei' ? '#c0392b' : '#5a4a3a'}
-            />
-          : <p style={bodyStyle}>{page.body}</p>
-      }
+      <div
+        className={`letter-content${page.pagetype === 'lined' ? ' lined' : ''}`}
+        dangerouslySetInnerHTML={{ __html: html ?? '' }}
+      />
     </motion.div>
   );
 }
@@ -299,10 +248,8 @@ const styles: Record<string, React.CSSProperties> = {
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
   page:        { position: 'absolute', inset: 0, padding: '0 32px 28px', transformOrigin: 'top left', overflowY: 'auto', background: '#fff' },
   manuscript:  { background: 'radial-gradient(ellipse at 20% 30%, #c8a96e22 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, #a0784422 0%, transparent 50%), #f5e6c8' } as React.CSSProperties,
-  linedBody:   { backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0px, transparent 25px, #b8cfe8 25px, #b8cfe8 26px)', backgroundSize: '100% 26px', backgroundClip: 'padding-box' } as React.CSSProperties,
   progressBar: { position: 'sticky', top: 0, left: '-32px', right: '-32px', height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { fontSize: 12, color: '#999', marginBottom: 16 },
-  body:        { fontFamily: 'Indie Flower, cursive', fontSize: 14, lineHeight: 1.85, whiteSpace: 'pre-line' },
   footer:      { padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
   cornerIcon:  { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, pointerEvents: 'none' },
   navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
