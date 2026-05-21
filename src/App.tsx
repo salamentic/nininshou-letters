@@ -133,15 +133,21 @@ export default function App() {
       <SpotifyPlayer link={spotifyLink} />
 
       <nav style={styles.tabs}>
-        {Array.from({ length: ENVELOPE_COUNT }, (_, i) => (
-          <button
-            key={i}
-            style={{ ...styles.tab, ...(i === currentEnvelope ? styles.tabActive : {}) }}
-            onClick={() => setCurrentEnvelope(i)}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {currentEnvelope > 1 && <span style={styles.tabEllipsis}>…</span>}
+        {[-1, 0, 1].map(offset => {
+          const i = currentEnvelope + offset;
+          if (i < 0 || i >= ENVELOPE_COUNT) return null;
+          return (
+            <button
+              key={i}
+              style={{ ...styles.tab, ...(i === currentEnvelope ? styles.tabActive : {}) }}
+              onClick={() => setCurrentEnvelope(i)}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+        {currentEnvelope < ENVELOPE_COUNT - 2 && <span style={styles.tabEllipsis}>…</span>}
       </nav>
         {/* Left Arrow */}
         {currentEnvelope > 0 && (
@@ -198,19 +204,26 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
   },
   tab: {
-    width: 28,
-    height: 28,
+    width: 36,
+    height: 36,
     borderRadius: '50%',
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
-    fontSize: 12,
+    fontSize: 16,
     fontFamily: "'Caveat', cursive",
-    color: '#555',
+    color: '#000',
     transition: 'all 0.2s',
   },
   tabActive: {
-    background: '#5a4a3a',
+    background: '#000',
     color: '#fff',
+  },
+  tabEllipsis: {
+    fontSize: 16,
+    color: '#000',
+    lineHeight: '36px',
+    padding: '0 2px',
+    userSelect: 'none',
   },
 };
