@@ -9,11 +9,15 @@ import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
 import BurgerMenu from './components/BurgerMenu';
 import SpotifyPlayer from './components/SpotifyPlayer';
 import spotifyData from './assets/spotify_embeds.json';
+import { getCookie, setCookie } from './lib/cookies';
 
 const ENVELOPE_COUNT = 32;
 
 export default function App() {
-  const [currentEnvelope, setCurrentEnvelope] = useState(0);
+  const [currentEnvelope, setCurrentEnvelope] = useState(() => {
+    const saved = parseInt(getCookie('lastEnvelope') ?? '');
+    return Number.isFinite(saved) && saved >= 0 && saved < ENVELOPE_COUNT ? saved : 0;
+  });
   const spotifyLink = useMemo(
     () => (spotifyData as Record<string, string>)[currentEnvelope] ?? null,
     [currentEnvelope]
@@ -28,6 +32,8 @@ export default function App() {
   // Preload flip sound so it's cached before any letter is opened
   useSound(flipSound, { volume: 0.05 });
   const [ready, setReady] = useState(false);
+
+  useEffect(() => { setCookie('lastEnvelope', String(currentEnvelope)); }, [currentEnvelope]);
 
   useEffect(() => {
     const img = new Image();

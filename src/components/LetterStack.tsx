@@ -113,7 +113,7 @@ export default function LetterStack({ onClose, number, initialPage = 0 }: Props)
   const envelopeDate = getEnvelopeDate(number);
 
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
-  useEffect(() => { modalRef.current?.focus(); }, []);
+useEffect(() => { modalRef.current?.focus(); }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
