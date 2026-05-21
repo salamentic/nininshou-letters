@@ -5,6 +5,45 @@ import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
+import { prepare, layout } from '@chenglou/pretext';
+
+const LINED_LH = 26;
+
+function LinedParagraph({ text, fontSize, fontFamily, color }: {
+  text: string; fontSize: number; fontFamily: string; color: string;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const width = el.clientWidth;
+    if (!width) return;
+    const prepared = prepare(text, `${fontSize}px ${fontFamily}`, { whiteSpace: 'pre-wrap' });
+    const result = layout(prepared, width, LINED_LH);
+    setMeasuredHeight(result.height);
+  }, [text, fontSize, fontFamily]);
+
+  return (
+    <p
+      ref={ref}
+      style={{
+        fontFamily,
+        fontSize,
+        color,
+        lineHeight: `${LINED_LH}px`,
+        whiteSpace: 'pre-line',
+        margin: 0,
+        height: measuredHeight !== null ? `${measuredHeight}px` : 'auto',
+        backgroundImage: `repeating-linear-gradient(to bottom, transparent 0px, transparent ${LINED_LH - 1}px, #b8cfe8 ${LINED_LH - 1}px, #b8cfe8 ${LINED_LH}px)`,
+        backgroundSize: `100% ${LINED_LH}px`,
+      }}
+    >
+      {text}
+    </p>
+  );
+}
 
 interface Props {
   onClose: () => void;
@@ -51,12 +90,20 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       <motion.div style={{ ...styles.progressBar, scaleX: scrollYProgress }} />
       <p style={styles.label}>{page.page}</p>
       {page.segments
-        ? page.segments.map((seg, j) => (
-            <p key={j} style={{ ...styles.body, color: seg.author === 'sensei' ? '#c0392b' : '#5a4a3a', ...(page.pagetype === 'lined' ? styles.linedBody : {}) }}>
-              {seg.text}
-            </p>
-          ))
-        : <p style={bodyStyle}>{page.body}</p>
+        ? page.segments.map((seg, j) => {
+            const segColor = seg.author === 'sensei' ? '#c0392b' : '#5a4a3a';
+            return page.pagetype === 'lined'
+              ? <LinedParagraph key={j} text={seg.text} fontSize={14} fontFamily='"Indie Flower", cursive' color={segColor} />
+              : <p key={j} style={{ ...styles.body, color: segColor }}>{seg.text}</p>;
+          })
+        : page.pagetype === 'lined'
+          ? <LinedParagraph
+              text={page.body}
+              fontSize={page.author === 'sensei' ? 18 : 14}
+              fontFamily={page.author !== 'sensei' ? '"Indie Flower", cursive' : '"Cookie", cursive'}
+              color={page.author === 'sensei' ? '#c0392b' : '#5a4a3a'}
+            />
+          : <p style={bodyStyle}>{page.body}</p>
       }
     </motion.div>
   );
