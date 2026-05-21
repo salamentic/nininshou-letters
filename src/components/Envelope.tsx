@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { memo, useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import envelopeImg from '@/assets/sample_envelope.png';
 import envelopeImgBack from '@/assets/sample_envelope_back.png';
@@ -22,13 +22,20 @@ const Envelope = forwardRef<EnvelopeHandle, Props>(({ number, triggerPage, close
   const [modalOpen, setModalOpen] = useState(false);
   const [initialPage, setInitialPage] = useState(0);
 
+  const openModal = useCallback((page = 0) => {
+    onPlaySound();
+    setInitialPage(page);
+    setOpen(true);
+    setTimeout(() => setModalOpen(true), 500);
+  }, [onPlaySound]);
+
   useImperativeHandle(ref, () => ({
     pressSpace: () => {
       if (!flipped) { onPlaySound(); setFlipped(true); }
-      else if (!open) { onPlaySound(); setOpen(true); setTimeout(() => setModalOpen(true), 500); }
+      else if (!open) { openModal(); }
       else { onPlaySound(); setModalOpen(false); setOpen(false); setTimeout(() => setFlipped(false), 700); }
     },
-  }));
+  }), [flipped, open, onPlaySound, openModal]);
 
   useEffect(() => {
     if (!closeSignal) return;
@@ -39,34 +46,26 @@ const Envelope = forwardRef<EnvelopeHandle, Props>(({ number, triggerPage, close
 
   useEffect(() => {
     if (triggerPage == null) return;
-    onPlaySound();
-    setInitialPage(triggerPage.pageIndex);
     setFlipped(true);
-    setOpen(true);
-    setTimeout(() => setModalOpen(true), 500);
-  }, [triggerPage]);
+    openModal(triggerPage.pageIndex);
+  }, [triggerPage, openModal]);
 
-  const flipEnvelope = () => {
+  const flipEnvelope = useCallback(() => {
     if (!flipped || open) setFlipped(f => !f);
-  };
+  }, [flipped, open]);
 
-  const openLetterModal = () => {
-    if (flipped && !open) {
-      onPlaySound();
-      setInitialPage(0);
-      setOpen(true);
-      setTimeout(() => setModalOpen(true), 500);
-    }
-  };
+  const openLetterModal = useCallback(() => {
+    if (flipped && !open) openModal();
+  }, [flipped, open, openModal]);
 
-  const closeLetterModal = () => {
+  const closeLetterModal = useCallback(() => {
     if (flipped && open) {
       onPlaySound();
       setModalOpen(false);
       setOpen(false);
       setTimeout(() => setFlipped(false), 700);
     }
-  };
+  }, [flipped, open, onPlaySound]);
 
   return (
     <div className="wrapper">

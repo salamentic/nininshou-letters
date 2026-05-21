@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import useSound from 'use-sound';
 import envelopeSound from './assets/envelope.wav';
@@ -29,16 +29,14 @@ export default function App() {
   } | null>(null);
   const [closeSignal, setCloseSignal] = useState(0);
   const envelopeRefs = useRef<(EnvelopeHandle | null)[]>([]);
-  const currentEnvelopeRef = useRef(currentEnvelope);
-  useEffect(() => { currentEnvelopeRef.current = currentEnvelope; }, [currentEnvelope]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuOpenRef = useRef(false);
-  useEffect(() => { menuOpenRef.current = menuOpen; }, [menuOpen]);
-  const openMenu = () => { setCloseSignal(s => s + 1); setMenuOpen(true); };
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
-  // Preload flip sound so it's cached before any letter is opened
-  useSound(flipSound, { volume: 0.05 });
+  useSound(flipSound, { volume: 0.05 }); // Preload flip sound
   const [ready, setReady] = useState(false);
+
+  // Single ref for stale-closure-free keydown handler
+  const handlerStateRef = useRef({ currentEnvelope, menuOpen });
+  useEffect(() => { handlerStateRef.current = { currentEnvelope, menuOpen }; }, [currentEnvelope, menuOpen]);
 
   useEffect(() => { setCookie('lastEnvelope', String(currentEnvelope)); }, [currentEnvelope]);
 
@@ -48,28 +46,39 @@ export default function App() {
     Promise.all([document.fonts.ready, img.decode()]).then(() => setReady(true));
   }, []);
 
-  const handlePageSelect = ({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
+  const openMenu = useCallback(() => {
+    setCloseSignal(s => s + 1);
+    setMenuOpen(true);
+  }, []);
+
+  const handlePageSelect = useCallback(({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
     setCurrentEnvelope(envelopeIndex);
     setTriggerPage({ envelopeIndex, pageIndex, ts: Date.now() });
-  };
+  }, []);
 
-  const navigate = (direction: 'previous' | 'next') => {
-    setCurrentEnvelope(prev => {
-      if (direction === 'previous') return Math.max(0, prev - 1);
-      if (direction === 'next') return Math.min(ENVELOPE_COUNT - 1, prev + 1);
-      return prev;
-    });
-  };
+  const navigate = useCallback((direction: 'previous' | 'next') => {
+    setCurrentEnvelope(prev =>
+      direction === 'previous' ? Math.max(0, prev - 1) : Math.min(ENVELOPE_COUNT - 1, prev + 1)
+    );
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') { e.preventDefault(); if (menuOpenRef.current) setMenuOpen(false); else openMenu(); return; }
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        if (handlerStateRef.current.menuOpen) setMenuOpen(false);
+        else openMenu();
+        return;
+      }
       if (document.querySelector('[role="dialog"]')) return;
-      if (e.key === ' ') { e.preventDefault(); envelopeRefs.current[currentEnvelopeRef.current]?.pressSpace(); }
+      if (e.key === ' ') {
+        e.preventDefault();
+        envelopeRefs.current[handlerStateRef.current.currentEnvelope]?.pressSpace();
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []); // navigate and openMenu are stable
+  }, [openMenu]);
 
   return (
     <>
@@ -200,7 +209,7 @@ export default function App() {
             ‹
           </button>
         )}
-         {/* Right Arrow */}
+        {/* Right Arrow */}
         {currentEnvelope < ENVELOPE_COUNT - 1 && (
           <button
             onClick={() => navigate('next')}

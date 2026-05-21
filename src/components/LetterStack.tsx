@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
@@ -8,13 +8,14 @@ import useSound from 'use-sound';
 
 const htmlCache = new Map<string, string>();
 const ruleOffsetCache = new Map<string, number>();
+let sharedCanvas: HTMLCanvasElement | null = null;
 
 const LINE_HEIGHT = 26;
 
 function getRuleOffset(font: string): number {
   if (ruleOffsetCache.has(font)) return ruleOffsetCache.get(font)!;
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d')!;
+  if (!sharedCanvas) sharedCanvas = document.createElement('canvas');
+  const ctx = sharedCanvas.getContext('2d')!;
   ctx.font = font;
   const ascent = ctx.measureText('あMg').actualBoundingBoxAscent;
   const fontSize = parseFloat(font);
@@ -112,25 +113,23 @@ export default function LetterStack({ onClose, number, initialPage = 0 }: Props)
 
   const envelopeDate = getEnvelopeDate(number);
 
+  const navigatePage = useCallback((dir: 1 | -1) => {
+    dirRef.current = dir;
+    setCurrent(c => dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0));
+  }, [pages.length]);
+
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
-useEffect(() => { modalRef.current?.focus(); }, []);
+  useEffect(() => { modalRef.current?.focus(); }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { onClose(); return; }
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        dirRef.current = 1;
-        setCurrent(c => Math.min(c + 1, pages.length - 1));
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        dirRef.current = -1;
-        setCurrent(c => Math.max(c - 1, 0));
-      }
+      if (e.key === 'ArrowRight') { e.preventDefault(); navigatePage(1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); navigatePage(-1); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, pages.length]);
+  }, [onClose, navigatePage]);
 
   // Scroll the incoming page to the correct end based on navigation direction
   useEffect(() => {
@@ -258,11 +257,11 @@ useEffect(() => { modalRef.current?.focus(); }, []);
 
           <img src="/flower.png" alt="" style={styles.cornerIcon} />
           <div style={styles.footer}>
-            <button className="btn-nav" style={styles.navBtn} onClick={() => { dirRef.current = -1; setCurrent(c => Math.max(c - 1, 0)); }} disabled={current === 0}>‹</button>
+            <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
             {pages.map((_, i) => (
               <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
             ))}
-            <button className="btn-nav" style={styles.navBtn} onClick={() => { dirRef.current = 1; setCurrent(c => Math.min(c + 1, pages.length - 1)); }} disabled={current === pages.length - 1}>›</button>
+            <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(1)} disabled={current === pages.length - 1}>›</button>
           </div>
         </motion.div>
       </motion.div>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages } from '@/lib/parseLetters';
 
@@ -12,7 +12,7 @@ interface Props {
   onOpenChange?: (open: boolean) => void;
 }
 
-export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount, open: controlledOpen, onOpenChange }: Props) {
+function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount, open: controlledOpen, onOpenChange }: Props) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = (val: boolean | ((prev: boolean) => boolean)) => {
@@ -124,6 +124,8 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
     </>
   );
 }
+
+export default memo(BurgerMenu);
 
 const styles: Record<string, React.CSSProperties> = {
   burger: {
