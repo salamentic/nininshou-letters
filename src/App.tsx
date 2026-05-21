@@ -149,6 +149,10 @@ export default function App() {
         })}
         {currentEnvelope < ENVELOPE_COUNT - 2 && <span style={styles.tabEllipsis}>…</span>}
       </nav>
+      <a href="#" style={styles.buyLink}>
+        Buy the original, physical copy here →
+      </a>
+
         {/* Left Arrow */}
         {currentEnvelope > 0 && (
           <button
@@ -218,6 +222,24 @@ const styles: Record<string, React.CSSProperties> = {
   tabActive: {
     background: '#000',
     color: '#fff',
+  },
+  buyLink: {
+    position: 'fixed',
+    bottom: 28,
+    right: 28,
+    zIndex: 50,
+    fontSize: 14,
+    fontFamily: "'Caveat', cursive",
+    color: '#3a2e22',
+    textDecoration: 'none',
+    background: 'rgba(245, 230, 200, 0.92)',
+    backdropFilter: 'blur(6px)',
+    border: '1px solid rgba(180,150,100,0.4)',
+    borderRadius: 10,
+    padding: '10px 16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    letterSpacing: '0.01em',
+    lineHeight: 1.3,
   },
   tabEllipsis: {
     fontSize: 16,
