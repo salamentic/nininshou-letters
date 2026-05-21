@@ -50,7 +50,7 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
   };
 
   const closeLetterModal = () => {
-    if (flipped && !open) {
+    if (flipped && open) {
       onPlaySound();
       setModalOpen(false);
       setOpen(false);
