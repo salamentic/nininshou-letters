@@ -1,9 +1,13 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import envelopeImg from '@/assets/sample_envelope.png';
 import envelopeImgBack from '@/assets/sample_envelope_back.png';
 import LetterStack from '@/components/LetterStack';
 import { getEnvelopeDate } from '@/lib/parseLetters';
+
+export interface EnvelopeHandle {
+  pressSpace: () => void;
+}
 
 interface Props {
   number: number;
@@ -12,11 +16,19 @@ interface Props {
   onPlaySound: () => void;
 }
 
-const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
+const Envelope = forwardRef<EnvelopeHandle, Props>(({ number, triggerPage, closeSignal, onPlaySound }, ref) => {
   const [flipped, setFlipped] = useState(false);
   const [open, setOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [initialPage, setInitialPage] = useState(0);
+
+  useImperativeHandle(ref, () => ({
+    pressSpace: () => {
+      if (!flipped) { onPlaySound(); setFlipped(true); }
+      else if (!open) { onPlaySound(); setOpen(true); setTimeout(() => setModalOpen(true), 500); }
+      else { onPlaySound(); setModalOpen(false); setOpen(false); setTimeout(() => setFlipped(false), 700); }
+    },
+  }));
 
   useEffect(() => {
     if (!closeSignal) return;
@@ -25,7 +37,6 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
     setFlipped(false);
   }, [closeSignal]);
 
-  // Trigger page is the page that this envelope was created for
   useEffect(() => {
     if (triggerPage == null) return;
     onPlaySound();
@@ -39,7 +50,6 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
     if (!flipped || open) setFlipped(f => !f);
   };
 
-  // Only works when the envelope is facing backwards, and is not open
   const openLetterModal = () => {
     if (flipped && !open) {
       onPlaySound();
@@ -94,6 +104,6 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
       </motion.div>
     </div>
   );
-};
+});
 
 export default memo(Envelope);

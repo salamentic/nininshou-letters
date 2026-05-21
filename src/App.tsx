@@ -1,10 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import useSound from 'use-sound';
 import envelopeSound from './assets/envelope.wav';
 import flipSound from './assets/flip.wav';
 import './styles.css';
-import Envelope from './components/Envelope';
+import Envelope, { type EnvelopeHandle } from './components/Envelope';
 import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
 import BurgerMenu from './components/BurgerMenu';
 import SpotifyPlayer from './components/SpotifyPlayer';
@@ -28,7 +28,12 @@ export default function App() {
     ts: number;
   } | null>(null);
   const [closeSignal, setCloseSignal] = useState(0);
+  const envelopeRefs = useRef<(EnvelopeHandle | null)[]>([]);
+  const currentEnvelopeRef = useRef(currentEnvelope);
+  useEffect(() => { currentEnvelopeRef.current = currentEnvelope; }, [currentEnvelope]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuOpenRef = useRef(false);
+  useEffect(() => { menuOpenRef.current = menuOpen; }, [menuOpen]);
   const openMenu = () => { setCloseSignal(s => s + 1); setMenuOpen(true); };
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
   // Preload flip sound so it's cached before any letter is opened
@@ -58,13 +63,13 @@ export default function App() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') { e.preventDefault(); if (menuOpenRef.current) setMenuOpen(false); else openMenu(); return; }
       if (document.querySelector('[role="dialog"]')) return;
-      if (e.key === 'ArrowLeft')  navigate('previous');
-      if (e.key === 'ArrowRight') navigate('next');
+      if (e.key === ' ') { e.preventDefault(); envelopeRefs.current[currentEnvelopeRef.current]?.pressSpace(); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []); // navigate is stable since it only calls setCurrentEnvelope
+  }, []); // navigate and openMenu are stable
 
   return (
     <>
@@ -126,6 +131,7 @@ export default function App() {
         {Array.from({ length: ENVELOPE_COUNT }, (_, i) => (
           <Envelope
             key={i}
+            ref={el => { envelopeRefs.current[i] = el; }}
             number={i + 1}
             triggerPage={triggerPage?.envelopeIndex === i ? triggerPage : null}
             closeSignal={closeSignal}
@@ -135,6 +141,15 @@ export default function App() {
       </EnvelopeStackScrollable>
 
       <SpotifyPlayer link={spotifyLink} />
+
+      <div style={{ ...styles.buyLink, bottom: 28, left: 28, right: 'auto', position: 'fixed', zIndex: 50 }}>
+        <div style={styles.instructions}>
+          <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
+          <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
+          <span><kbd style={styles.kbd}>tab</kbd> menu</span>
+          <span><kbd style={styles.kbd}>esc</kbd> close</span>
+        </div>
+      </div>
 
       <nav style={styles.tabs}>
         {currentEnvelope > 1 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
@@ -251,6 +266,28 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.01em',
     lineHeight: 1.3,
     transition: 'all 0.2s',
+  },
+  kbd: {
+    display: 'inline-block',
+    background: 'rgba(90,74,58,0.12)',
+    border: '1px solid rgba(90,74,58,0.3)',
+    borderRadius: 4,
+    padding: '0px 5px',
+    fontSize: 14,
+    fontFamily: 'monospace',
+    lineHeight: '20px',
+    verticalAlign: 'middle',
+  },
+  instructions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    fontFamily: "'Caveat', cursive",
+    fontSize: 18,
+    color: '#000',
+    opacity: 0.7,
+    pointerEvents: 'none',
+    userSelect: 'none',
   },
   tabEllipsis: {
     fontSize: 16,
