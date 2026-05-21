@@ -25,6 +25,7 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
     setFlipped(false);
   }, [closeSignal]);
 
+  // Trigger page is the page that this envelope was created for
   useEffect(() => {
     if (triggerPage == null) return;
     onPlaySound();
@@ -38,12 +39,22 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
     if (!flipped || open) setFlipped(f => !f);
   };
 
+  // Only works when the envelope is facing backwards, and is not open
   const openLetterModal = () => {
     if (flipped && !open) {
       onPlaySound();
       setInitialPage(0);
       setOpen(true);
       setTimeout(() => setModalOpen(true), 500);
+    }
+  };
+
+  const closeLetterModal = () => {
+    if (flipped && !open) {
+      onPlaySound();
+      setModalOpen(false);
+      setOpen(false);
+      setTimeout(() => setFlipped(false), 700);
     }
   };
 
@@ -74,11 +85,7 @@ const Envelope = ({ number, triggerPage, closeSignal, onPlaySound }: Props) => {
         <AnimatePresence>
           {modalOpen && (
             <LetterStack
-              onClose={() => {
-                setModalOpen(false);
-                setOpen(false);
-                setTimeout(() => setFlipped(false), 700);
-              }}
+              onClose={closeLetterModal}
               number={number}
               initialPage={initialPage}
             />
