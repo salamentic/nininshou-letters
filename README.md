@@ -2,6 +2,13 @@
 
 # 二人称 (Nininshou)
 
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white&labelColor=20232a)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646cff?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white)
+
+→ [How to write letter pages](LETTERS.md)
+
 An interactive web reader for the *二人称* letter correspondence — 32 envelopes containing letters and poems exchanged between a boy and his sensei, presented as a physical letter-reading experience.
 
 ## What it does
@@ -15,11 +22,13 @@ An interactive web reader for the *二人称* letter correspondence — 32 envel
 ## Running
 
 ```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build
-npm run preview
+npm install        # install dependencies
+npm run dev        # start dev server at http://localhost:5173
+npm run build      # production build → dist/
+npm run preview    # preview the production build locally
 ```
+
+> Requires Node 18+. The build outputs static files — deploy `dist/` to any static host (Vercel, Netlify, GitHub Pages, etc.).
 
 ## Project structure
 
