@@ -187,6 +187,37 @@ body {
   display: block;
 }
 
+/* ── Hover annotations ── */
+.letter-content .note {
+  border-bottom: 1px dashed currentColor;
+  cursor: help;
+  position: relative;
+}
+
+.letter-content .note::after {
+  content: attr(data-note);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2c2416;
+  color: #f5e6c8;
+  font-family: 'Caveat', cursive;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 200;
+}
+
+.letter-content .note:hover::after {
+  opacity: 1;
+}
+
 .letter-content img {
   max-width: 100%;
   height: auto;
