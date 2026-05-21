@@ -131,10 +131,21 @@ body {
 .letter-content.lined {
   background-image: repeating-linear-gradient(
     to bottom,
-    transparent 0px,
-    transparent 25px,
-    #b8cfe8 25px,
-    #b8cfe8 26px
+    #7aaed4 0px,
+    #7aaed4 1px,
+    transparent 1px,
+    transparent 26px
+  );
+  background-size: 100% 26px;
+}
+
+.letter-content.manuscript {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #c4a468bb 0px,
+    #c4a468bb 1px,
+    transparent 1px,
+    transparent 26px
   );
   background-size: 100% 26px;
 }
@@ -144,13 +155,13 @@ body {
 }
 
 .letter-content p.boy {
-  font-family: 'Indie Flower', cursive;
-  font-size: 14px;
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
   color: #5a4a3a;
 }
 
 .letter-content p.sensei {
-  font-family: 'Cookie', cursive;
+  font-family: 'La Belle Aurore', cursive;
   font-size: 18px;
   color: #c0392b;
 }

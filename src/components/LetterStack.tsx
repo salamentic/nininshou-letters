@@ -1,12 +1,28 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence, useScroll } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
 const htmlCache = new Map<string, string>();
+const ruleOffsetCache = new Map<string, number>();
+
+const LINE_HEIGHT = 26;
+
+function getRuleOffset(font: string): number {
+  if (ruleOffsetCache.has(font)) return ruleOffsetCache.get(font)!;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  ctx.font = font;
+  const ascent = ctx.measureText('あMg').actualBoundingBoxAscent;
+  const fontSize = parseFloat(font);
+  const halfLeading = (LINE_HEIGHT - fontSize) / 2;
+  const offset = halfLeading + ascent;
+  ruleOffsetCache.set(font, offset);
+  return offset;
+}
 
 interface Props {
   onClose: () => void;
@@ -23,8 +39,8 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
   onFlip: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ container: ref });
   const [html, setHtml] = useState<string | null>(htmlCache.get(page.page) ?? null);
+  const [ruleOffset, setRuleOffset] = useState<number | null>(null);
 
   useEffect(() => {
     if (htmlCache.has(page.page)) { setHtml(htmlCache.get(page.page)!); return; }
@@ -38,6 +54,11 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       });
   }, [page.page]);
 
+  useEffect(() => {
+    const font = page.author === 'sensei' ? '18px "La Belle Aurore"' : '16px Caveat';
+    document.fonts.ready.then(() => setRuleOffset(getRuleOffset(font)));
+  }, [page.author]);
+
   return (
     <motion.div
       ref={el => {
@@ -48,10 +69,15 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
       style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}) }}
     >
-      <motion.div style={{ ...styles.progressBar, scaleX: scrollYProgress }} />
+      <motion.div
+        style={styles.progressBar}
+        animate={{ scaleX: (current + 1) / total }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+      />
       <p style={styles.label}>{page.page}</p>
       <div
-        className={`letter-content${page.pagetype === 'lined' ? ' lined' : ''}`}
+        className={`letter-content ${page.pagetype}`}
+        style={ruleOffset !== null ? { backgroundPositionY: `${ruleOffset + 4}px` } : undefined}
         dangerouslySetInnerHTML={{ __html: html ?? '' }}
       />
     </motion.div>
@@ -247,7 +273,17 @@ const styles: Record<string, React.CSSProperties> = {
   header:      { padding: '14px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
   page:        { position: 'absolute', inset: 0, padding: '0 32px 28px', transformOrigin: 'top left', overflowY: 'auto', background: '#fff' },
-  manuscript:  { background: 'radial-gradient(ellipse at 20% 30%, #c8a96e22 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, #a0784422 0%, transparent 50%), #f5e6c8' } as React.CSSProperties,
+  manuscript:  {
+    backgroundImage: [
+      "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.07'/></svg>\")",
+      'radial-gradient(ellipse at 0% 0%, #b8864422 0%, transparent 50%)',
+      'radial-gradient(ellipse at 100% 0%, #a07040' + '18 0%, transparent 45%)',
+      'radial-gradient(ellipse at 50% 100%, #8b6030' + '22 0%, transparent 55%)',
+      'radial-gradient(ellipse at 20% 40%, #c8a96e' + '18 0%, transparent 40%)',
+      'radial-gradient(ellipse at 80% 60%, #d4aa6e' + '14 0%, transparent 40%)',
+      'linear-gradient(160deg, #ede0c4 0%, #e8d5aa 40%, #dcc890 100%)',
+    ].join(', '),
+  } as React.CSSProperties,
   progressBar: { position: 'sticky', top: 0, left: '-32px', right: '-32px', height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { fontSize: 12, color: '#999', marginBottom: 16 },
   footer:      { padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
