@@ -50,6 +50,7 @@ export default function App() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"]')) return;
       if (e.key === 'ArrowLeft')  navigate('previous');
       if (e.key === 'ArrowRight') navigate('next');
     };

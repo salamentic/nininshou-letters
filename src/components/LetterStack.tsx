@@ -185,6 +185,9 @@ export default function LetterStack({ onClose, number, initialPage = 0 }: Props)
     <motion.div
       style={styles.overlay}
       onClick={onClose}
+      onTouchStart={e => e.stopPropagation()}
+      onTouchMove={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
