@@ -4,188 +4,131 @@ An interactive web reader for the *二人称* letter correspondence — 32 envel
 
 ## What it does
 
-- Displays 32 envelopes in a scrollable card stack
-- Click an envelope to flip it over, then open it to read its letters
-- Each letter is displayed as a paginated stack with scroll-progress tracking
-- A per-envelope Spotify embed plays music associated with each letter set
-- Background art changes to match the selected envelope
-- A burger menu lets you jump directly to any envelope or specific page
+- 32 envelopes in a scrollable card stack; click to flip and open
+- Letters rendered as paginated stacks with page-flip animations
+- Per-envelope Spotify embed and background art
+- Burger menu for jumping directly to any envelope or page
+- Hover annotations for translations and notes
 
-## Running the project
+## Running
 
 ```bash
 npm install
-npm run dev      # dev server at http://localhost:5173
-npm run build    # production build
-npm run preview  # preview production build
+npm run dev      # http://localhost:5173
+npm run build
+npm run preview
 ```
 
 ## Project structure
 
 ```
 src/
-├── App.tsx                          # Root component — owns all shared state
-├── main.tsx                         # React entry point
-├── styles.css                       # Global CSS (envelope card, flap, layout)
-├── index.css                        # Body/root baseline styles
-├── global.d.ts                      # Asset type declarations (wav, png, svg)
+├── App.tsx                          # Root — owns envelope state, keyboard nav, arrows
+├── styles.css                       # Global CSS + letter content classes
 │
 ├── assets/
-│   ├── nininshou.json               # All letter content (source of truth)
-│   ├── spotify_embeds.json          # Spotify embed URLs keyed by envelope number
-│   ├── sample_envelope.png          # Envelope front image
-│   ├── sample_envelope_back.png     # Envelope back image
-│   ├── envelope.wav                 # Sound for opening an envelope
-│   └── flip.wav                     # Sound for flipping a letter page
+│   ├── nininshou.json               # Envelope metadata (no longer stores body text)
+│   └── spotify_embeds.json          # Spotify URLs keyed by envelope index
 │
 ├── components/
-│   ├── Envelope.tsx                 # Single envelope card with flip + open animation
-│   ├── EnvelopeStackScrollable.tsx  # Scrollable card stack that holds all envelopes
-│   ├── LetterStack.tsx              # Modal letter reader with page-flip animation
-│   ├── BurgerMenu.tsx               # Slide-in nav drawer (envelope + page links)
-│   └── SpotifyPlayer.tsx            # Floating Spotify iframe embed
+│   ├── Envelope.tsx                 # Single envelope: flip + open + modal
+│   ├── EnvelopeStackScrollable.tsx  # Scrollable card stack
+│   ├── LetterStack.tsx              # Modal letter reader
+│   ├── BurgerMenu.tsx               # Slide-in nav drawer
+│   └── SpotifyPlayer.tsx            # Floating Spotify embed
 │
 └── lib/
-    ├── parseLetters.ts              # Data access layer over nininshou.json
-    └── utils.ts                     # `cn()` — Tailwind class merge helper
+    └── parseLetters.ts              # Data access over nininshou.json
+
+public/
+└── letters/
+    ├── 1-1.html                     # One HTML file per letter page
+    ├── 1-3.html
+    └── ...                          # 167 pages total
+
+scripts/
+└── generate-html-pages.mjs          # Regenerates HTML from nininshou.json
 ```
 
-## Data format (`nininshou.json`)
+## Letter pages (HTML)
 
-The entire letter corpus lives in `src/assets/nininshou.json` as an array of `Envelope` objects:
+Each page is a standalone HTML fragment at `public/letters/{page-id}.html`. The renderer fetches it at runtime and injects it into the modal. You can use any HTML — the following classes are styled:
+
+```html
+<!-- Author voices -->
+<p class="boy">boy's handwriting — Caveat, dark brown</p>
+<p class="sensei">sensei's handwriting — La Belle Aurore, red</p>
+
+<!-- Inline styles -->
+<span class="strikethrough">crossed out</span>
+<span class="underline">underlined</span>
+<span class="scribble">tilted, faded — like a margin note</span>
+
+<!-- Block elements -->
+<span class="annotation">* footnote or correction</span>
+<img src="/letters/images/sketch.png" alt="" />
+
+<!-- Hover annotation (translation tooltip) -->
+<span class="note" data-note="translation or gloss here">日本語</span>
+```
+
+To regenerate all pages from the JSON (resets edits):
+```bash
+node scripts/generate-html-pages.mjs
+```
+
+## Page types
+
+Controlled by `pagetype` in `nininshou.json`:
+
+| Type | Background |
+|---|---|
+| `manuscript` | Warm parchment with paper grain texture and sepia ruled lines |
+| `lined` | White with blue ruled lines |
+
+Ruled lines are aligned to the font baseline using Canvas `measureText` for pixel accuracy.
+
+## Envelope metadata (`nininshou.json`)
 
 ```ts
 interface Envelope {
-  envelope:      number;        // 1-based envelope number
-  date?:         string | null;
-  spotify_embed: string;        // Spotify embed URL (or "" if none)
+  envelope:      number;        // 1-based
+  spotify_embed: string;
   pages:         Letter[];
 }
 
 interface Letter {
-  page:          string;        // Label shown in the UI, e.g. "1-1"
-  date:          string | null;
-  author:        'boy' | 'sensei' | 'mixed';
-  pagetype:      'lined' | 'manuscript'; // Controls page background style
-  stamp:         boolean;
+  page:     string;             // page ID + display label, e.g. "1-1"
+  date:     string | null;
+  author:   'boy' | 'sensei';  // used for font baseline measurement
+  pagetype: 'lined' | 'manuscript';
+  stamp:    boolean;
   translated_by: string;
-  body:          string;        // Full text (used when segments is absent)
-  paired_with?:  string;        // Optional pairing with another page
-  segments?:     Segment[];     // Used for mixed-author pages
-}
-
-interface Segment {
-  author: 'boy' | 'sensei';
-  text:   string;
+  body:     string;             // fallback if HTML file is missing
 }
 ```
-
-**Author styles:**
-- `boy` — dark brown ink (`#5a4a3a`), Indie Flower font, 14px
-- `sensei` — red ink (`#c0392b`), Cookie font, 18px
-- `mixed` — rendered as a list of `Segment` objects, each styled by their own author
-
-**Page types:**
-- `manuscript` — warm parchment background (radial gradient on `#f5e6c8`)
-- `lined` — white background with blue horizontal rule lines
-
-## Component guide
-
-### `App.tsx`
-The root. Owns `currentEnvelope` (0-indexed), splash screen logic, and `closeSignal` (a counter that tells all envelopes to close simultaneously when the burger menu opens). Renders the background image, tab bar, and all major children.
-
-**Key state:**
-| State | Purpose |
-|---|---|
-| `currentEnvelope` | Which envelope is active (0-indexed) |
-| `triggerPage` | Deep-link a specific page in a specific envelope from the burger menu |
-| `closeSignal` | Incremented to broadcast "close everything" to all Envelope instances |
-| `ready` | Splash screen — waits for fonts + background image to load |
-
----
-
-### `EnvelopeStackScrollable.tsx`
-A generic scrollable card stack. Accepts any `children` array. The active card sits at center; cards below are offset slightly upward to peek. Supports mouse wheel, keyboard arrows, Home/End, and touch swipe.
-
-**Key constants** (tweak to adjust feel):
-```ts
-CARD_HEIGHT = 300          // px height of each card slot
-FRAME_OFFSET = -9          // px each card peeks above the one in front
-FRAMES_VISIBLE_LENGTH = 4  // how many cards peek
-SCROLL_THRESHOLD = 20      // min wheel deltaY to trigger a scroll
-TOUCH_SCROLL_THRESHOLD = 100 // min touch drag distance
-```
-
----
-
-### `Envelope.tsx`
-A single envelope card. Three visual states:
-
-1. **Front** — shows envelope number and date; clicking flips the card
-2. **Back** — shows the envelope back; clicking opens the flap and launches the letter modal
-3. **Modal open** — renders `LetterStack` as a portal
-
-Animation is coordinated through props:
-- `triggerPage` — non-null value triggers a flip + open + jump to a specific page (from burger menu)
-- `closeSignal` — when it changes, immediately resets all state to closed
-
----
-
-### `LetterStack.tsx`
-The letter reading modal. Renders as a `createPortal` onto `document.body`.
-
-Pages are laid out as absolutely-positioned divs stacked on top of each other. The `current` index controls which page is "on top" — pages before `current` animate off to the upper-left (simulating being flipped away). See `pageAnimate()` for the exact transform values.
-
-**Scroll handling:** The modal intercepts `wheel` events. If the active page has scrollable content and isn't at its end, scrolling scrolls the page text. Once the page reaches its end, continued scrolling flips to the next page. An accumulator + 700ms debounce prevents accidental rapid flips.
-
-**Navigation:**
-- Mouse wheel (with scroll-to-end → page-flip behavior)
-- `←` / `→` arrow keys
-- Prev/Next buttons in the footer
-- `Escape` closes the modal
-
----
-
-### `BurgerMenu.tsx`
-A slide-in panel from the left. Lists all envelopes; clicking an envelope expands it to show its individual pages. Clicking a page fires `onPageSelect`, which updates `currentEnvelope` in App and sets `triggerPage` to open that letter directly.
-
-Opening the menu also fires `onOpen` → plays the envelope sound and increments `closeSignal` to collapse any open envelope.
-
----
-
-### `SpotifyPlayer.tsx`
-A fixed-position Spotify iframe anchored above the tab bar. Fades in/out when `link` changes. The link comes from `spotify_embeds.json`, keyed by envelope number.
-
----
-
-### `lib/parseLetters.ts`
-The only file that imports `nininshou.json`. Exports two helpers:
-
-```ts
-getEnvelopePages(number: number): Letter[]   // 1-indexed
-getEnvelopeDate(number: number): string      // first non-null date in the envelope
-```
-
----
 
 ## Adding content
 
 **New envelope:**
-1. Add an entry to `src/assets/nininshou.json` with the next `envelope` number and its `pages`
-2. Add a background image `public/nininshou_table_N.png` where N is the new envelope index (0-based)
-3. Optionally add a Spotify embed URL to `src/assets/spotify_embeds.json` with the key `"N"` (0-based)
+1. Add an entry to `nininshou.json`
+2. Add `public/nininshou_table_N.png` (N = 0-based index)
+3. Add a Spotify URL to `spotify_embeds.json` (key = 0-based index, or `""`)
 4. Bump `ENVELOPE_COUNT` in `src/App.tsx`
+5. Create `public/letters/{page-id}.html` for each page
 
 **New page in an existing envelope:**
-Add a `Letter` object to the `pages` array of the relevant envelope in `nininshou.json`. The `page` field is the display label (e.g. `"3-7"`).
+1. Add a `Letter` entry to `nininshou.json`
+2. Create `public/letters/{page-id}.html`
 
 ## Tech stack
 
 | Library | Use |
 |---|---|
-| React 19 | UI framework |
-| Vite | Build tool and dev server |
-| TypeScript | Type safety |
-| `motion/react` (Framer Motion) | All animations |
-| `use-sound` | Envelope and page-flip sound effects |
-| Tailwind CSS | Utility classes (via `cn()` helper) |
+| React 19 | UI |
+| Vite | Build + dev server |
+| TypeScript | Types |
+| `motion/react` | All animations |
+| `use-sound` | Sound effects |
+| `@chenglou/pretext` | Font baseline measurement for line alignment |
+| Tailwind CSS | Utility classes |
