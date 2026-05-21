@@ -8,10 +8,18 @@ interface Props {
   onPageSelect: (selection: { envelopeIndex: number; pageIndex: number }) => void;
   onOpen?: () => void;
   envelopeCount: number;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount }: Props) {
-  const [open, setOpen] = useState(false);
+export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount, open: controlledOpen, onOpenChange }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (val: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof val === 'function' ? val(open) : val;
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [expandedEnvelope, setExpandedEnvelope] = useState<number | null>(null);
   const allPages = useMemo(
     () => Array.from({ length: envelopeCount }, (_, i) => getEnvelopePages(i + 1)),
@@ -32,6 +40,7 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
     <>
       <button
         style={styles.burger}
+        className="btn-burger"
         onClick={() => {
           setOpen(o => {
             if (!o) setTimeout(() => onOpen?.(), 0);
@@ -39,9 +48,9 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
           });
         }}
       >
-        <motion.span animate={{ rotate: open ? 45 : 0, y: open ? 7 : 0 }} style={styles.bar} />
-        <motion.span animate={{ opacity: open ? 0 : 1 }} style={styles.bar} />
-        <motion.span animate={{ rotate: open ? -45 : 0, y: open ? -7 : 0 }} style={styles.bar} />
+        <span style={styles.bar} />
+        <span style={styles.bar} />
+        <span style={styles.bar} />
       </button>
 
       <AnimatePresence>
@@ -59,7 +68,7 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.3, ease: [0.76, 0, 0.24, 1] }}
+              transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
             >
               <p style={styles.heading}>Envelopes</p>
               {Array.from({ length: envelopeCount }, (_, i) => {
@@ -70,6 +79,7 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
                   <div key={i}>
                     <button
                       style={{ ...styles.item, ...(i === currentEnvelope ? styles.itemActive : {}) }}
+                      className="btn-menu-item"
                       onClick={() => handleEnvelopeClick(i)}
                     >
                       <span>{i + 1}</span>
@@ -95,6 +105,7 @@ export default function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, on
                             <button
                               key={page.page}
                               style={styles.subItem}
+                              className="btn-menu-sub"
                               onClick={() => handlePageClick(i, j)}
                             >
                               {page.page}
@@ -120,7 +131,7 @@ const styles: Record<string, React.CSSProperties> = {
     top: 20,
     left: 20,
     zIndex: 200,
-    background: 'rgba(255,255,255,0.75)',
+    background: 'rgba(245,230,200,0.75)',
     backdropFilter: 'blur(8px)',
     border: 'none',
     borderRadius: 8,
@@ -155,7 +166,7 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     bottom: 0,
     width: 200,
-    background: 'rgba(255,255,255,0.92)',
+    background: 'rgba(245,230,200,0.92)',
     backdropFilter: 'blur(12px)',
     zIndex: 202,
     padding: '72px 20px 24px',

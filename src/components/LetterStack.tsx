@@ -67,7 +67,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       }}
       animate={pageAnimate(i, current, onFlip)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
-      style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}) }}
+      style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}) }}
     >
       <motion.div
         style={styles.progressBar}
@@ -235,7 +235,11 @@ useEffect(() => { modalRef.current?.focus(); }, []);
         >
           <div style={styles.header}>
             <span>Envelope {number} {envelopeDate}</span>
-            <button onClick={onClose}>✕</button>
+            <button
+              onClick={onClose}
+              style={styles.closeBtn}
+              className="btn-close"
+            >✕</button>
           </div>
 
           <div style={styles.stack}>
@@ -254,11 +258,11 @@ useEffect(() => { modalRef.current?.focus(); }, []);
 
           <img src="/flower.png" alt="" style={styles.cornerIcon} />
           <div style={styles.footer}>
-            <button style={styles.navBtn} onClick={() => { dirRef.current = -1; setCurrent(c => Math.max(c - 1, 0)); }} disabled={current === 0}>‹</button>
+            <button className="btn-nav" style={styles.navBtn} onClick={() => { dirRef.current = -1; setCurrent(c => Math.max(c - 1, 0)); }} disabled={current === 0}>‹</button>
             {pages.map((_, i) => (
               <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
             ))}
-            <button style={styles.navBtn} onClick={() => { dirRef.current = 1; setCurrent(c => Math.min(c + 1, pages.length - 1)); }} disabled={current === pages.length - 1}>›</button>
+            <button className="btn-nav" style={styles.navBtn} onClick={() => { dirRef.current = 1; setCurrent(c => Math.min(c + 1, pages.length - 1)); }} disabled={current === pages.length - 1}>›</button>
           </div>
         </motion.div>
       </motion.div>
@@ -269,10 +273,10 @@ useEffect(() => { modalRef.current?.focus(); }, []);
 
 const styles: Record<string, React.CSSProperties> = {
   overlay:     { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
-  modal:       { background: '#fff', borderRadius: 12, width: '80vw', height: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-  header:      { padding: '14px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
+  modal:       { background: '#f5e6c8', borderRadius: 12, width: '80vw', height: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+  header:      { padding: '14px 16px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
-  page:        { position: 'absolute', inset: 0, padding: '0 32px 28px', transformOrigin: 'top left', overflowY: 'auto', background: '#fff' },
+  page:        { position: 'absolute', inset: 0, padding: '0 32px 28px', transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8' },
   manuscript:  {
     backgroundImage: [
       "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.07'/></svg>\")",
@@ -285,9 +289,10 @@ const styles: Record<string, React.CSSProperties> = {
     ].join(', '),
   } as React.CSSProperties,
   progressBar: { position: 'sticky', top: 0, left: '-32px', right: '-32px', height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
-  label:       { fontSize: 12, color: '#999', marginBottom: 16 },
-  footer:      { padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
+  label:       { fontSize: 18, color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive", opacity: 0.6 },
+  footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
   cornerIcon:  { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, pointerEvents: 'none' },
   navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
+  closeBtn:    { width: 32, height: 32, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 14, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },
 };

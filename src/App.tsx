@@ -28,6 +28,8 @@ export default function App() {
     ts: number;
   } | null>(null);
   const [closeSignal, setCloseSignal] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const openMenu = () => { setCloseSignal(s => s + 1); setMenuOpen(true); };
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
   // Preload flip sound so it's cached before any letter is opened
   useSound(flipSound, { volume: 0.05 });
@@ -111,8 +113,10 @@ export default function App() {
         currentEnvelope={currentEnvelope}
         onSelect={setCurrentEnvelope}
         onPageSelect={handlePageSelect}
-        onOpen={() => { playEnvelopeSound(); setCloseSignal(s => s + 1); }}
+        onOpen={openMenu}
         envelopeCount={ENVELOPE_COUNT}
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
       />
       <EnvelopeStackScrollable
         selectedIndex={currentEnvelope}
@@ -133,7 +137,7 @@ export default function App() {
       <SpotifyPlayer link={spotifyLink} />
 
       <nav style={styles.tabs}>
-        {currentEnvelope > 1 && <span style={styles.tabEllipsis}>…</span>}
+        {currentEnvelope > 1 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
         {[-1, 0, 1].map(offset => {
           const i = currentEnvelope + offset;
           if (i < 0 || i >= ENVELOPE_COUNT) return null;
@@ -141,17 +145,27 @@ export default function App() {
             <button
               key={i}
               style={{ ...styles.tab, ...(i === currentEnvelope ? styles.tabActive : {}) }}
+              className={i === currentEnvelope ? 'btn-tab btn-tab-active' : 'btn-tab'}
               onClick={() => setCurrentEnvelope(i)}
             >
               {i + 1}
             </button>
           );
         })}
-        {currentEnvelope < ENVELOPE_COUNT - 2 && <span style={styles.tabEllipsis}>…</span>}
+        {currentEnvelope < ENVELOPE_COUNT - 2 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
       </nav>
-      <a href="#" style={styles.buyLink}>
-        Buy the original, physical copy here →
-      </a>
+      <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+        <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
+          Original site →
+        </a>
+        <a href="https://www.cdjapan.co.jp/product/NEOBK-3159512" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
+          Buy the original, physical copy here or on any other proxy site →
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <img src="https://st.cdjapan.co.jp/pictures/l/16/19/NEOBK-3159512.jpg?v=2" alt="二人称 physical copy" style={{ width: 80, borderRadius: 4 }} />
+            <img src="https://sp.universal-music.co.jp/yorushika/nininshou/assets/images/product_image_01.jpg" alt="二人称 product" style={{ width: 80, borderRadius: 4 }} />
+          </div>
+        </a>
+      </div>
 
         {/* Left Arrow */}
         {currentEnvelope > 0 && (
@@ -160,7 +174,7 @@ export default function App() {
             className="fixed left-4 top-1/2 -translate-y-1/2 z-50
                       w-10 h-10 flex items-center justify-center
                       rounded-full
-                      bg-[rgba(255,255,255,0.92)]/70 hover:bg-[rgba(255,255,255,0.92)]
+                      bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)]
                       text-[#5a4a3a] text-xl
                       shadow-md hover:shadow-lg
                       backdrop-blur-sm
@@ -178,7 +192,7 @@ export default function App() {
             className="fixed right-4 top-1/2 -translate-y-1/2 z-50
                       w-10 h-10 flex items-center justify-center
                       rounded-full
-                      bg-[rgba(255,255,255,0.92)]/70 hover:bg-[rgba(255,255,255,0.92)]
+                      bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)]
                       text-[#5a4a3a] text-xl
                       shadow-md hover:shadow-lg
                       backdrop-blur-sm
@@ -201,7 +215,7 @@ const styles: Record<string, React.CSSProperties> = {
     transform: 'translateX(-50%)',
     display: 'flex',
     gap: 6,
-    background: 'rgba(255,255,255,0.75)',
+    background: 'rgba(245,230,200,0.75)',
     backdropFilter: 'blur(8px)',
     borderRadius: 999,
     padding: '6px 10px',
@@ -224,15 +238,11 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#fff',
   },
   buyLink: {
-    position: 'fixed',
-    bottom: 28,
-    right: 28,
-    zIndex: 50,
-    fontSize: 14,
+    fontSize: 20,
     fontFamily: "'Caveat', cursive",
     color: '#3a2e22',
     textDecoration: 'none',
-    background: 'rgba(245, 230, 200, 0.92)',
+    background: 'rgba(245, 230, 200, 0.45)',
     backdropFilter: 'blur(6px)',
     border: '1px solid rgba(180,150,100,0.4)',
     borderRadius: 10,
@@ -240,6 +250,7 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
     letterSpacing: '0.01em',
     lineHeight: 1.3,
+    transition: 'all 0.2s',
   },
   tabEllipsis: {
     fontSize: 16,
