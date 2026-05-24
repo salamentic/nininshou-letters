@@ -49,7 +49,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(text => { htmlCache.set(page.page, text); setHtml(text); })
       .catch(() => {
-        const fallback = `<p class="${page.author === 'sensei' ? 'sensei' : 'boy'}">${page.body ?? ''}</p>`;
+        const fallback = `<p class="annotation">(page not found: ${page.page})</p>`;
         htmlCache.set(page.page, fallback);
         setHtml(fallback);
       });

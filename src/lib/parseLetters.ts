@@ -12,7 +12,6 @@ export interface Letter {
   pagetype:      'lined' | 'manuscript';
   stamp:         boolean;
   translated_by: string;
-  body:          string;
   paired_with?:  string;
   segments?:     Segment[];
 }
