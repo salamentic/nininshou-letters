@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# Windows Zone.Identifier sidecar files
+*:Zone.Identifier
+
+# Local notes
+LEARNING*.md

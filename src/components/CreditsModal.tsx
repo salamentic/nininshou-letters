@@ -125,12 +125,6 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 10,
     fontFamily: 'sans-serif',
   },
-  entry: {
-    fontFamily: "'Caveat', cursive",
-    fontSize: 20,
-    color: '#3a2e22',
-    margin: 0,
-  },
   note: {
     fontFamily: "'Caveat', cursive",
     fontSize: 15,

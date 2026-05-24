@@ -12,7 +12,6 @@ const CARD_HEIGHT = 300;
 const CARD_PADDING = 100;
 const FRAME_OFFSET = -9;
 const FRAMES_VISIBLE_LENGTH = 4;
-const SNAP_DISTANCE = 50;
 const TRANSITION_DURATION = 30;
 
 const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
@@ -179,7 +178,6 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
       aria-live="polite"
       className={cn("relative mx-auto h-fit w-fit min-w-[300px]", className)}
     >
-      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: Interactive scrollable widget requires event handlers */}
       <div
         aria-label="Scrollable card container"
         className="h-full w-full"
@@ -189,7 +187,6 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
         ref={containerRef}
         role="application"
         style={{ minHeight: `${CARD_HEIGHT + CARD_PADDING}px`, perspectiveOrigin: "center 60%", touchAction: "none" }}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: Required for keyboard navigation
         tabIndex={0}
       >
         {items.map((item, i) => {
@@ -231,10 +228,7 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
                   : { scale: HOVER_SCALE_MULTIPLIER, transition: { type: "spring", stiffness: 380, damping: 28, mass: 0.4 } }
               }
             >
-              <div className={cn("flex transition-all duration-200", isScrolling && isActive && "ring-2 ring-brand ring-opacity-50")}>
-                {isScrolling && isActive && (
-                  <div className="absolute -top-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-brand opacity-75" />
-                )}
+              <div className="flex">
                 <div className="relative w-full flex-1 overflow-visible">
                   {item}
                 </div>

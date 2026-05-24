@@ -10,9 +10,8 @@ export interface Letter {
   date:          string | null;
   author:        'boy' | 'sensei' | 'mixed';
   pagetype:      'lined' | 'manuscript';
-  stamp:         boolean;
-  translated_by: string;
-  paired_with?:  string;
+  stamp:        boolean;
+  paired_with?: string;
   segments?:     Segment[];
 }
 
