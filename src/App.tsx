@@ -333,7 +333,7 @@ const styles: Record<string, React.CSSProperties> = {
     backdropFilter: 'blur(6px)',
     border: '1px solid rgba(180,150,100,0.4)',
     borderRadius: 10,
-    padding: '6px 10px',
+    padding: '6px 18px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
     cursor: 'pointer',
     transition: 'all 0.2s',
