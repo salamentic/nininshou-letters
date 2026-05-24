@@ -31,7 +31,6 @@ export default function CreditsModal({ onClose }: Props) {
         <div style={styles.body}>
           <div style={styles.column}>
             <p style={styles.colHeading}>Translation</p>
-            <p style={styles.entry}><strong>Cyo</strong></p>
             <p style={styles.note}>Letters &amp; lyrics from 二人称 by Yorushika</p>
           </div>
 
@@ -39,7 +38,6 @@ export default function CreditsModal({ onClose }: Props) {
 
           <div style={styles.column}>
             <p style={styles.colHeading}>Website</p>
-            <p style={styles.entry}><strong>Cyo</strong></p>
             <p style={styles.note}>React · TypeScript · Vite · Framer Motion</p>
             <p style={{ ...styles.note, marginTop: 16 }}>
               <a

@@ -154,14 +154,16 @@ export default function App() {
       <SpotifyPlayer link={spotifyLink} />
 
       <div className="desktop-only" style={{ position: 'fixed', bottom: 28, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-        <div style={styles.instructions}>
-          <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
-          <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
-          <span><kbd style={styles.kbd}>tab</kbd> menu</span>
-          <span><kbd style={styles.kbd}>esc</kbd> close</span>
+        <div style={{ ...styles.buyLink }}>
+          <div style={styles.instructions}>
+            <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
+            <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
+            <span><kbd style={styles.kbd}>tab</kbd> menu</span>
+            <span><kbd style={styles.kbd}>esc</kbd> close</span>
+          </div>
         </div>
         <button
-          style={styles.creditsBtn}
+          style={{ ...styles.buyLink, fontSize: 16, padding: '6px 14px' }}
           className="btn-buy"
           onClick={() => setCreditsOpen(true)}
         >
@@ -309,11 +311,6 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 0.7,
     pointerEvents: 'none',
     userSelect: 'none',
-  },
-  creditsBtn: {
-    fontSize: 16,
-    padding: '6px 14px',
-    alignSelf: 'flex-start',
   },
   tabEllipsis: {
     fontSize: 16,
