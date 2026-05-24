@@ -68,9 +68,11 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
       }}
       animate={pageAnimate(i, current, onFlip)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
+      className="letter-page"
       style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}) }}
     >
       <motion.div
+        className="letter-progress-bar"
         style={styles.progressBar}
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
@@ -275,7 +277,7 @@ const styles: Record<string, React.CSSProperties> = {
   modal:       { background: '#f5e6c8', borderRadius: 12, width: '80vw', height: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   header:      { padding: '14px 16px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
-  page:        { position: 'absolute', inset: 0, padding: '0 130px 40px', transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8' },
+  page:        { position: 'absolute', inset: 0, transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8' },
   manuscript:  {
     backgroundImage: [
       "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.07'/></svg>\")",
@@ -287,7 +289,7 @@ const styles: Record<string, React.CSSProperties> = {
       'linear-gradient(160deg, #ede0c4 0%, #e8d5aa 40%, #dcc890 100%)',
     ].join(', '),
   } as React.CSSProperties,
-  progressBar: { position: 'sticky', top: 0, left: '-130px', right: '-130px', height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
+  progressBar: { position: 'sticky', top: 0, height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { fontSize: 18, color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive", opacity: 0.6 },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
   cornerIcon:  { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, pointerEvents: 'none' },
