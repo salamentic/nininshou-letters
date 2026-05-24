@@ -157,8 +157,8 @@ export default function App() {
 
       <SpotifyPlayer link={spotifyLink} />
 
-      <div className="desktop-only" style={{ position: 'fixed', bottom: 28, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-        <div style={{ ...styles.buyLink }}>
+      <div style={{ position: 'fixed', bottom: 28, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+        <div className="desktop-only" style={{ ...styles.buyLink }}>
           <div style={styles.instructions}>
             <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
             <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
