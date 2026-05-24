@@ -138,6 +138,8 @@ export default function LetterStack({ onClose, number, initialPage = 0 }: Props)
     const pageEl = pageRefs.current[current];
     if (!pageEl) return;
     pageEl.scrollTop = dirRef.current === 1 ? 0 : pageEl.scrollHeight;
+    // On mobile, default to showing main text (left margin scrollable to the left)
+    pageEl.scrollLeft = window.matchMedia('(max-width: 640px)').matches ? 110 : 0;
   }, [current]);
 
   useEffect(() => {

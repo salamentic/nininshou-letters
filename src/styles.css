@@ -136,7 +136,15 @@ body {
 }
 
 @media (max-width: 640px) {
-  .letter-page { --lp: 20px; padding-bottom: 32px; }
+  .letter-page {
+    --lp: 20px;
+    padding-bottom: 32px;
+    overflow-x: auto;
+  }
+  .letter-page .letter-content {
+    padding-left: 110px;
+    min-width: calc(100% + 150px);
+  }
 }
 
 @media (min-width: 641px) and (max-width: 900px) {
