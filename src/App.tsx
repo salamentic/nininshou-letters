@@ -10,6 +10,7 @@ import BurgerMenu from './components/BurgerMenu';
 import SpotifyPlayer from './components/SpotifyPlayer';
 import spotifyData from './assets/spotify_embeds.json';
 import { getCookie, setCookie } from './lib/cookies';
+import CreditsModal from './components/CreditsModal';
 
 const ENVELOPE_COUNT = 32;
 
@@ -30,6 +31,7 @@ export default function App() {
   const [closeSignal, setCloseSignal] = useState(0);
   const envelopeRefs = useRef<(EnvelopeHandle | null)[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
   useSound(flipSound, { volume: 0.05 }); // Preload flip sound
   const [ready, setReady] = useState(false);
@@ -151,14 +153,24 @@ export default function App() {
 
       <SpotifyPlayer link={spotifyLink} />
 
-      <div className="desktop-only" style={{ ...styles.buyLink, bottom: 28, left: 28, right: 'auto', position: 'fixed', zIndex: 50 }}>
+      <div className="desktop-only" style={{ position: 'fixed', bottom: 28, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
         <div style={styles.instructions}>
           <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
           <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
           <span><kbd style={styles.kbd}>tab</kbd> menu</span>
           <span><kbd style={styles.kbd}>esc</kbd> close</span>
         </div>
+        <button
+          style={styles.creditsBtn}
+          className="btn-buy"
+          onClick={() => setCreditsOpen(true)}
+        >
+          Credits
+        </button>
       </div>
+      <AnimatePresence>
+        {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
+      </AnimatePresence>
 
       <nav style={styles.tabs}>
         {currentEnvelope > 1 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
@@ -297,6 +309,11 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 0.7,
     pointerEvents: 'none',
     userSelect: 'none',
+  },
+  creditsBtn: {
+    fontSize: 16,
+    padding: '6px 14px',
+    alignSelf: 'flex-start',
   },
   tabEllipsis: {
     fontSize: 16,
