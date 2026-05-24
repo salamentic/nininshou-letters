@@ -233,7 +233,7 @@ export default function LetterStack({ onClose, number, initialPage = 0 }: Props)
           transition={{ duration: 0.2, delay: 0.45 }}
         >
           <div style={styles.header}>
-            <span>Envelope {number} {envelopeDate}</span>
+            <span>Envelope {number}{envelopeDate ? `, ${envelopeDate}` : ''}</span>
             <button
               onClick={onClose}
               style={styles.closeBtn}
