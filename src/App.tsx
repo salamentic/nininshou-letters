@@ -13,6 +13,8 @@ import { getCookie, setCookie } from './lib/cookies';
 import CreditsModal from './components/CreditsModal';
 
 const ENVELOPE_COUNT = 32;
+const BG_IMAGES = new Set([0, 1, 2, 3, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 31]);
+const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.png`;
 
 export default function App() {
   const [currentEnvelope, setCurrentEnvelope] = useState(() => {
@@ -118,7 +120,7 @@ export default function App() {
             position: 'fixed',
             inset: 0,
             zIndex: -1,
-            backgroundImage: `url(/nininshou_table_${currentEnvelope}.png)`,
+            backgroundImage: `url(${bgImage(currentEnvelope)})`,
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'auto',
             backgroundPosition: 'center',
