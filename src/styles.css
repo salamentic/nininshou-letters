@@ -187,8 +187,8 @@ body {
 .letter-content .margin-note {
   float: right;
   clear: right;
-  width: 64px;
-  margin-right: -28px;
+  width: 72px;
+  margin-right: -60px;
   margin-left: 6px;
   font-family: 'Indie Flower', cursive;
   font-size: 11px;
@@ -203,8 +203,8 @@ body {
 .letter-content .margin-note-left {
   float: left;
   clear: left;
-  width: 64px;
-  margin-left: -28px;
+  width: 72px;
+  margin-left: -60px;
   margin-right: 6px;
   font-family: 'Indie Flower', cursive;
   font-size: 11px;
