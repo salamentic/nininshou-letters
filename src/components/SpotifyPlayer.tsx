@@ -34,7 +34,7 @@ export default function SpotifyPlayer({ link }: Props) {
 const styles: Record<string, React.CSSProperties> = {
   anchor: {
     position: 'fixed',
-    bottom: 72,
+    bottom: 80,
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 50,

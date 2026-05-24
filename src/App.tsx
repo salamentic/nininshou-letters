@@ -157,7 +157,7 @@ export default function App() {
 
       <SpotifyPlayer link={spotifyLink} />
 
-      <div style={{ position: 'fixed', bottom: 28, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+      <div style={{ position: 'fixed', bottom: 80, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
         <div className="desktop-only" style={{ ...styles.buyLink }}>
           <div style={styles.instructions}>
             <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
@@ -205,7 +205,7 @@ export default function App() {
         })}
         {currentEnvelope < ENVELOPE_COUNT - 2 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
       </nav>
-      <div className="desktop-only" style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+      <div className="desktop-only" style={{ position: 'fixed', bottom: 80, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
         <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
           Original site →
         </a>
@@ -335,9 +335,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     padding: '6px 18px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    minWidth: 64,
     cursor: 'pointer',
     transition: 'all 0.2s',
-    appearance: 'none',
   } as React.CSSProperties,
   tabEllipsis: {
     fontSize: 16,
