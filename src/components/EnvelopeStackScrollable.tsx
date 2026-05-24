@@ -3,8 +3,8 @@ import React from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const SCROLL_TIMEOUT_OFFSET = 100;
-const MIN_SCROLL_INTERVAL = 300;
+const SCROLL_TIMEOUT_OFFSET = 50;
+const MIN_SCROLL_INTERVAL = 180;
 const SCROLL_THRESHOLD = 20;
 const TOUCH_SCROLL_THRESHOLD = 100;
 const HOVER_SCALE_MULTIPLIER = 1.02;
@@ -223,12 +223,12 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
               transition={
                 shouldReduceMotion
                   ? { duration: 0 }
-                  : { type: "spring", stiffness: 250, damping: 20, mass: 0.5, duration: 0.25 }
+                  : { type: "spring", stiffness: 380, damping: 28, mass: 0.4 }
               }
               whileHover={
                 shouldReduceMotion || !isActive
                   ? {}
-                  : { scale: HOVER_SCALE_MULTIPLIER, transition: { type: "spring", stiffness: 250, damping: 20, mass: 0.5, duration: 0.25 } }
+                  : { scale: HOVER_SCALE_MULTIPLIER, transition: { type: "spring", stiffness: 380, damping: 28, mass: 0.4 } }
               }
             >
               <div className={cn("flex transition-all duration-200", isScrolling && isActive && "ring-2 ring-brand ring-opacity-50")}>

@@ -151,7 +151,7 @@ export default function App() {
 
       <SpotifyPlayer link={spotifyLink} />
 
-      <div style={{ ...styles.buyLink, bottom: 28, left: 28, right: 'auto', position: 'fixed', zIndex: 50 }}>
+      <div className="desktop-only" style={{ ...styles.buyLink, bottom: 28, left: 28, right: 'auto', position: 'fixed', zIndex: 50 }}>
         <div style={styles.instructions}>
           <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
           <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
@@ -178,7 +178,7 @@ export default function App() {
         })}
         {currentEnvelope < ENVELOPE_COUNT - 2 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
       </nav>
-      <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+      <div className="desktop-only" style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
         <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
           Original site →
         </a>
