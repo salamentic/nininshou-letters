@@ -29,31 +29,34 @@ interface Props {
   onClose: () => void;
   number: number;
   initialPage?: number;
+  language: string;
 }
 
-function LetterPage({ page, i, current, total, setPageRef, onFlip }: {
+function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
   page: Letter;
   i: number;
   current: number;
   total: number;
   setPageRef: (el: HTMLDivElement | null) => void;
   onFlip: () => void;
+  language: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [html, setHtml] = useState<string | null>(htmlCache.get(page.page) ?? null);
+  const cacheKey = `${language}/${page.page}`;
+  const [html, setHtml] = useState<string | null>(htmlCache.get(cacheKey) ?? null);
   const [ruleOffset, setRuleOffset] = useState<number | null>(null);
 
   useEffect(() => {
-    if (htmlCache.has(page.page)) { setHtml(htmlCache.get(page.page)!); return; }
-    fetch(`/letters/${page.page}.html`)
+    if (htmlCache.has(cacheKey)) { setHtml(htmlCache.get(cacheKey)!); return; }
+    fetch(`/letters/${language}/${page.page}.html`)
       .then(r => r.ok ? r.text() : Promise.reject())
-      .then(text => { htmlCache.set(page.page, text); setHtml(text); })
+      .then(text => { htmlCache.set(cacheKey, text); setHtml(text); })
       .catch(() => {
         const fallback = `<p class="annotation">(page not found: ${page.page})</p>`;
-        htmlCache.set(page.page, fallback);
+        htmlCache.set(cacheKey, fallback);
         setHtml(fallback);
       });
-  }, [page.page]);
+  }, [cacheKey]);
 
   useEffect(() => {
     const font = page.author === 'sensei' ? '18px "La Belle Aurore"' : '16px Caveat';
@@ -100,7 +103,7 @@ function pageAnimate(i: number, current: number, soundFn: () => void) {
   };
 }
 
-export default function LetterStack({ onClose, number, initialPage = 0 }: Props) {
+export default function LetterStack({ onClose, number, initialPage = 0, language }: Props) {
   const pages = useMemo(() => getEnvelopePages(number), [number]);
   const [current, setCurrent] = useState(initialPage);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
@@ -255,6 +258,7 @@ export default function LetterStack({ onClose, number, initialPage = 0 }: Props)
                 total={pages.length}
                 setPageRef={el => { pageRefs.current[i] = el; }}
                 onFlip={playFlip}
+                language={language}
               />
             ))}
           </div>

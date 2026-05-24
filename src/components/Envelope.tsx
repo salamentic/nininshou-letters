@@ -14,9 +14,10 @@ interface Props {
   triggerPage: { envelopeIndex: number; pageIndex: number; ts: number } | null;
   closeSignal: number;
   onPlaySound: () => void;
+  language: string;
 }
 
-const Envelope = forwardRef<EnvelopeHandle, Props>(({ number, triggerPage, closeSignal, onPlaySound }, ref) => {
+const Envelope = forwardRef<EnvelopeHandle, Props>(({ number, triggerPage, closeSignal, onPlaySound, language }, ref) => {
   const [flipped, setFlipped] = useState(false);
   const [open, setOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -97,6 +98,7 @@ const Envelope = forwardRef<EnvelopeHandle, Props>(({ number, triggerPage, close
               onClose={closeLetterModal}
               number={number}
               initialPage={initialPage}
+              language={language}
             />
           )}
         </AnimatePresence>

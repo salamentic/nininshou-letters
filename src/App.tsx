@@ -34,6 +34,7 @@ export default function App() {
   const envelopeRefs = useRef<(EnvelopeHandle | null)[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
+  const [language, setLanguage] = useState('en');
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
   useSound(flipSound, { volume: 0.05 }); // Preload flip sound
   const [ready, setReady] = useState(false);
@@ -149,6 +150,7 @@ export default function App() {
             triggerPage={triggerPage?.envelopeIndex === i ? triggerPage : null}
             closeSignal={closeSignal}
             onPlaySound={playEnvelopeSound}
+            language={language}
           />
         ))}
       </EnvelopeStackScrollable>
@@ -164,13 +166,22 @@ export default function App() {
             <span><kbd style={styles.kbd}>esc</kbd> close</span>
           </div>
         </div>
-        <button
-          style={{ ...styles.buyLink, fontSize: 16, padding: '6px 14px' }}
-          className="btn-buy"
-          onClick={() => setCreditsOpen(true)}
-        >
-          Credits
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            style={{ ...styles.buyLink, fontSize: 16, padding: '6px 14px' }}
+            className="btn-buy"
+            onClick={() => setCreditsOpen(true)}
+          >
+            Credits
+          </button>
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+            style={styles.langSelect}
+          >
+            <option value="en">EN</option>
+          </select>
+        </div>
       </div>
       <AnimatePresence>
         {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
@@ -314,6 +325,20 @@ const styles: Record<string, React.CSSProperties> = {
     pointerEvents: 'none',
     userSelect: 'none',
   },
+  langSelect: {
+    fontFamily: "'Caveat', cursive",
+    fontSize: 16,
+    color: '#3a2e22',
+    background: 'rgba(245, 230, 200, 0.45)',
+    backdropFilter: 'blur(6px)',
+    border: '1px solid rgba(180,150,100,0.4)',
+    borderRadius: 10,
+    padding: '6px 10px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    appearance: 'none',
+  } as React.CSSProperties,
   tabEllipsis: {
     fontSize: 16,
     color: '#000',
