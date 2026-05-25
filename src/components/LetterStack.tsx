@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from 'motion/react';
+import { annotate } from 'rough-notation';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
@@ -62,6 +63,29 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
     const font = page.author === 'sensei' ? '18px "La Belle Aurore"' : '16px Caveat';
     document.fonts.ready.then(() => setRuleOffset(getRuleOffset(font)));
   }, [page.author]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const annotationsRef = useRef<any[]>([]);
+  useEffect(() => {
+    if (!ref.current || !html) return;
+    annotationsRef.current.forEach(a => a.remove());
+    annotationsRef.current = [];
+    const container = ref.current;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const next: any[] = [];
+    container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
+      next.push(annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }))
+    );
+    container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
+      next.push(annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+    );
+    container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
+      next.push(annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+    );
+    next.forEach(a => a.show());
+    annotationsRef.current = next;
+    return () => { annotationsRef.current.forEach(a => a.remove()); annotationsRef.current = []; };
+  }, [html]);
 
   return (
     <motion.div
