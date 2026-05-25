@@ -385,6 +385,16 @@
       },
       {
         "envelope": 6,
+        "page": "6-4",
+        "date": "5/3",
+        "author": "boy",
+        "pagetype": "manuscript",
+        "stamp": false,
+        "translated_by": "",
+        "body": ""
+      },
+      {
+        "envelope": 6,
         "page": "6-5",
         "date": "5/3",
         "author": "sensei",
