@@ -24,7 +24,8 @@ Each page is an HTML file in `public/letters/{lang}/`, named like `en/1-1.html` 
 ```html
 <span class="rn-circle">word</span>     <!-- red circle -->
 <span class="rn-cross">word</span>      <!-- crossed out -->
-<span class="rn-underline">word</span>  <!-- underline -->
+<span class="rn-underline">word</span>      <!-- underline -->
+<span class="rn-underline-red">word</span>  <!-- red underline -->
 ```
 
 ## Hover tooltips

@@ -281,7 +281,8 @@ body {
    rn-underline → rough underline */
 .letter-content .rn-circle,
 .letter-content .rn-cross,
-.letter-content .rn-underline {
+.letter-content .rn-underline,
+.letter-content .rn-underline-red {
   display: inline;
 }
 
