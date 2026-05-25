@@ -22,10 +22,10 @@ Each page is an HTML file in `public/letters/{lang}/`, named like `en/1-1.html` 
 ## Hand-drawn annotations
 
 ```html
-<span class="rn-circle">word</span>     <!-- red circle -->
-<span class="rn-cross">word</span>      <!-- crossed out -->
-<span class="rn-underline">word</span>      <!-- underline -->
-<span class="rn-underline-red">word</span>  <!-- red underline -->
+<span class="rn-circle">red circle</span>    
+<span class="rn-cross">crossed out</span>
+<span class="rn-underline">underline</span>
+<span class="rn-underline-red">red underline</span>
 ```
 
 ## Hover tooltips
