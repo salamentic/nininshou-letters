@@ -66,29 +66,48 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annotationsRef = useRef<any[]>([]);
+
+  // Create annotations after html loads — delayed 750ms so the modal entry
+  // animation finishes before getBoundingClientRect() is called.
   useEffect(() => {
     if (!ref.current || !html) return;
     annotationsRef.current.forEach(a => a.remove());
     annotationsRef.current = [];
     const container = ref.current;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const next: any[] = [];
-    container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
-      next.push(annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }))
-    );
-    container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
-      next.push(annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }))
-    );
-    container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
-      next.push(annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }))
-    );
-    container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
-      next.push(annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }))
-    );
-    next.forEach(a => a.show());
-    annotationsRef.current = next;
-    return () => { annotationsRef.current.forEach(a => a.remove()); annotationsRef.current = []; };
+    const timer = setTimeout(() => {
+      if (!container) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const next: any[] = [];
+      container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
+        next.push(annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }))
+      );
+      container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
+        next.push(annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+      );
+      container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
+        next.push(annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+      );
+      container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
+        next.push(annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }))
+      );
+      next.forEach(a => a.show());
+      annotationsRef.current = next;
+    }, 750);
+    return () => {
+      clearTimeout(timer);
+      annotationsRef.current.forEach(a => a.remove());
+      annotationsRef.current = [];
+    };
   }, [html]);
+
+  // Refresh positions when this page becomes current after a page flip animation.
+  useEffect(() => {
+    if (i !== current || !annotationsRef.current.length) return;
+    const timer = setTimeout(() => {
+      annotationsRef.current.forEach(a => a.show());
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [i, current]);
 
   return (
     <motion.div
