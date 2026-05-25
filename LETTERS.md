@@ -1,6 +1,6 @@
 # Writing Letter Pages
 
-Each page is an HTML file in `public/letters/`, named like `1-1.html` (envelope 1, page 1).
+Each page is an HTML file in `public/letters/{lang}/`, named like `en/1-1.html` (envelope 1, page 1, English).
 
 ## Text
 
@@ -17,6 +17,14 @@ Each page is an HTML file in `public/letters/`, named like `1-1.html` (envelope 
 <span class="scribble">hasty, slightly tilted</span>
 <span class="highlight">red highlight</span>
 <span class="annotation">small footnote text</span>
+```
+
+## Hand-drawn annotations
+
+```html
+<span class="rn-circle">word</span>     <!-- red circle -->
+<span class="rn-cross">word</span>      <!-- crossed out -->
+<span class="rn-underline">word</span>  <!-- underline -->
 ```
 
 ## Hover tooltips
