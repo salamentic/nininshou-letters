@@ -172,13 +172,10 @@ body {
   line-height: 26px;
   white-space: pre-line;
   position: relative;
-}
-
-/* When a top-margin annotation is present, push the ruled content down to
-   make room for it.  margin-top (not padding-top) is used so the
-   background-image / backgroundPositionY line grid is unaffected. */
-.letter-content:has(.margin-note-top) {
-  margin-top: 80px;
+  /* Consistent header zone above every page — large enough to host a
+     .margin-note-top annotation.  margin-top (not padding-top) keeps the
+     background-image / backgroundPositionY line grid unaffected. */
+  margin-top: 60px;
 }
 
 .letter-content.lined {
@@ -255,10 +252,10 @@ body {
 .letter-content .margin-note-top {
   /* Lifted out of flow into the reserved header zone above .letter-content */
   position: absolute;
-  top: -80px;
+  top: -60px;
   left: 0;
   right: 0;
-  height: 80px;
+  height: 60px;
   overflow: visible;
   display: flex;
   flex-direction: column;
