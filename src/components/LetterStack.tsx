@@ -97,50 +97,27 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
     document.fonts.ready.then(() => setRuleOffset(getRuleOffset(font)));
   }, [page.author]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const annotationsRef = useRef<any[]>([]);
-
-  // Create annotations after html loads — delayed 750ms so the modal entry
-  // animation finishes before getBoundingClientRect() is called.
   useEffect(() => {
-    if (!ref.current || !html) return;
-    annotationsRef.current.forEach(a => a.remove());
-    annotationsRef.current = [];
+    if (i !== current || !ref.current || !html) return;
     const container = ref.current;
-    const timer = setTimeout(() => {
-      if (!container) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const next: any[] = [];
+    const t = setTimeout(() => {
+      // Wipe any stale SVGs from a previous visit before redrawing.
+      container.querySelectorAll('svg.rough-annotation').forEach(s => s.remove());
       container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
-        next.push(annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }))
+        annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }).show()
       );
       container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
-        next.push(annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+        annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
       );
       container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
-        next.push(annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+        annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
       );
       container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
-        next.push(annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }))
+        annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }).show()
       );
-      next.forEach(a => a.show());
-      annotationsRef.current = next;
     }, 750);
-    return () => {
-      clearTimeout(timer);
-      annotationsRef.current.forEach(a => a.remove());
-      annotationsRef.current = [];
-    };
-  }, [html]);
-
-  // Refresh positions when this page becomes current after a page flip animation.
-  useEffect(() => {
-    if (i !== current || !annotationsRef.current.length) return;
-    const timer = setTimeout(() => {
-      annotationsRef.current.forEach(a => a.show());
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [i, current]);
+    return () => clearTimeout(t);
+  }, [i, current, html]);
 
   return (
     <motion.div
