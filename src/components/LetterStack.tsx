@@ -102,8 +102,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
     const container = ref.current;
-    const t = setTimeout(() => drawAnnotations(container), 550);
-    return () => clearTimeout(t);
+    drawAnnotations(container);
   }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function drawAnnotations(container: HTMLElement) {
