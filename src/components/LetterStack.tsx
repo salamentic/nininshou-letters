@@ -97,27 +97,30 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
     document.fonts.ready.then(() => setRuleOffset(getRuleOffset(font)));
   }, [page.author]);
 
+  // On initial modal open the page is already at its resting position so
+  // onAnimationComplete never fires — handle that case with a timer instead.
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
     const container = ref.current;
-    const t = setTimeout(() => {
-      // Wipe any stale SVGs from a previous visit before redrawing.
-      container.querySelectorAll('svg.rough-annotation').forEach(s => s.remove());
-      container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
-        annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }).show()
-      );
-      container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
-        annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
-      );
-      container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
-        annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
-      );
-      container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
-        annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }).show()
-      );
-    }, 750);
+    const t = setTimeout(() => drawAnnotations(container), 750);
     return () => clearTimeout(t);
-  }, [i, current, html]);
+  }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function drawAnnotations(container: HTMLElement) {
+    container.querySelectorAll('svg.rough-annotation').forEach(s => s.remove());
+    container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
+      annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }).show()
+    );
+    container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
+      annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
+    );
+    container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
+      annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
+    );
+    container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
+      annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }).show()
+    );
+  }
 
   return (
     <motion.div
@@ -127,6 +130,9 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
       }}
       animate={pageAnimate(i, current, onFlip)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
+      onAnimationComplete={() => {
+        if (i === current && ref.current && html) drawAnnotations(ref.current);
+      }}
       className="letter-page"
       style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}) }}
     >
