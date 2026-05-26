@@ -290,7 +290,8 @@ body {
   margin: 0;
 }
 
-.letter-content p:has(> .margin-note-top) {
+.letter-content p:has(> .margin-note-top),
+.letter-content p:empty:has(+ .margin-note-top) {
   line-height: 0;
 }
 
