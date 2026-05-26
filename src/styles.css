@@ -178,6 +178,17 @@ body {
   margin-top: 60px;
 }
 
+/* Top margin line — drawn at the boundary between the header zone and content */
+.letter-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid rgba(90,74,58,0.25);
+  pointer-events: none;
+}
+
 .letter-content.lined {
   background-image: repeating-linear-gradient(
     to bottom,
