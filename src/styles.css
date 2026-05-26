@@ -290,6 +290,10 @@ body {
   margin: 0;
 }
 
+.letter-content p:has(> .margin-note-top) {
+  line-height: 0;
+}
+
 .letter-content .highlight {
   background: rgba(255, 80, 80, 0.35);
   border-radius: 2px;
