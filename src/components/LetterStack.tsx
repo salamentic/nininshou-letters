@@ -7,6 +7,32 @@ import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
+/** Deterministic value in [0, 1) from a seed + slot so stamp stays the same on re-open. */
+function seededRand(seed: number, slot: number): number {
+  const x = Math.sin(seed * 127.1 + slot * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function stampStyle(envelopeNumber: number): React.CSSProperties {
+  const r = (slot: number) => seededRand(envelopeNumber, slot);
+  const rotation  = r(0) * 36  - 18;          // –18° … +18°
+  const offsetX   = r(1) * 12  - 6;            // –6 … +6 px from right edge
+  const offsetY   = r(2) * 12  - 6;            // –6 … +6 px from bottom edge
+  const opacity   = 0.45 + r(3) * 0.55;        // 0.45 … 1.0  (ink strength)
+  const scale     = 0.85 + r(4) * 0.30;        // 0.85 … 1.15 (stamp size)
+  return {
+    position: 'absolute',
+    bottom: offsetY,
+    right: offsetX,
+    width: 36,
+    height: 36,
+    pointerEvents: 'none',
+    opacity,
+    transform: `rotate(${rotation}deg) scale(${scale})`,
+    transformOrigin: 'center',
+  };
+}
+
 const htmlCache = new Map<string, string>();
 const ruleOffsetCache = new Map<string, number>();
 let sharedCanvas: HTMLCanvasElement | null = null;
@@ -309,7 +335,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
             ))}
           </div>
 
-          <img src="/flower.png" alt="" style={styles.cornerIcon} />
+          <img src="/flower.png" alt="" style={stampStyle(number)} />
           <div style={styles.footer}>
             <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
             {pages.map((_, i) => (
@@ -344,8 +370,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressBar: { position: 'sticky', top: 0, height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { fontSize: 18, color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive", opacity: 0.6 },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
-  cornerIcon:  { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, pointerEvents: 'none' },
-  navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
+navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 32, height: 32, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 14, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },
 };
