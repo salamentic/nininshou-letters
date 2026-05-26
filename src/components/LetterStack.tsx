@@ -66,7 +66,7 @@ interface Props {
   language: string;
 }
 
-function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
+function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fontScale }: {
   page: Letter;
   i: number;
   current: number;
@@ -74,6 +74,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
   setPageRef: (el: HTMLDivElement | null) => void;
   onFlip: () => void;
   language: string;
+  fontScale: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const cacheKey = `${language}/${page.page}`;
@@ -105,6 +106,14 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
     const t = setTimeout(() => drawAnnotations(container), 300);
     return () => clearTimeout(t);
   }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Redraw annotations when font scale changes — SVG positions are stale after reflow.
+  useEffect(() => {
+    if (i !== current || !ref.current || !html) return;
+    const container = ref.current;
+    const raf = requestAnimationFrame(() => drawAnnotations(container));
+    return () => cancelAnimationFrame(raf);
+  }, [fontScale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function drawAnnotations(container: HTMLElement) {
     container.querySelectorAll('svg.rough-annotation').forEach(s => s.remove());
@@ -146,7 +155,10 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
       <p style={styles.label}>{page.page}</p>
       <div
         className={`letter-content ${page.pagetype}`}
-        style={ruleOffset !== null ? { backgroundPositionY: `${ruleOffset + 4}px` } : undefined}
+        style={{
+          '--lc-scale': fontScale,
+          backgroundPositionY: ruleOffset !== null ? `${(ruleOffset + 4) * fontScale}px` : undefined,
+        } as React.CSSProperties}
         dangerouslySetInnerHTML={{ __html: html ?? '' }}
       />
     </motion.div>
@@ -169,6 +181,7 @@ function pageAnimate(i: number, current: number, soundFn: () => void) {
 export default function LetterStack({ onClose, number, initialPage = 0, language }: Props) {
   const pages = useMemo(() => getEnvelopePages(number), [number]);
   const [current, setCurrent] = useState(initialPage);
+  const [fontScale, setFontScale] = useState(1.0);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -304,11 +317,25 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
         >
           <div style={styles.header}>
             <span>Envelope {number}{envelopeDate ? `, ${envelopeDate}` : ''}</span>
-            <button
-              onClick={onClose}
-              style={styles.closeBtn}
-              className="btn-close"
-            >✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={() => setFontScale(s => Math.max(0.75, +(s - 0.125).toFixed(3)))}
+                style={styles.fontBtn}
+                className="btn-nav desktop-only"
+                disabled={fontScale <= 0.75}
+              >A−</button>
+              <button
+                onClick={() => setFontScale(s => Math.min(1.5, +(s + 0.125).toFixed(3)))}
+                style={styles.fontBtn}
+                className="btn-nav desktop-only"
+                disabled={fontScale >= 1.5}
+              >A+</button>
+              <button
+                onClick={onClose}
+                style={styles.closeBtn}
+                className="btn-close"
+              >✕</button>
+            </div>
           </div>
 
           <div style={styles.stack}>
@@ -322,6 +349,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
                 setPageRef={el => { pageRefs.current[i] = el; }}
                 onFlip={playFlip}
                 language={language}
+                fontScale={fontScale}
               />
             ))}
           </div>
@@ -362,5 +390,6 @@ const styles: Record<string, React.CSSProperties> = {
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
 navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 32, height: 32, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 14, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
+  fontBtn:     { background: 'none', border: 'none', fontSize: 13, cursor: 'pointer', color: '#888', padding: '0 6px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em' } as React.CSSProperties,
   dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },
 };
