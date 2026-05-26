@@ -170,7 +170,6 @@ body {
 /* ── Letter page content ── */
 .letter-content {
   line-height: 26px;
-  white-space: pre-line;
   position: relative;
   /* Consistent header zone above every page — large enough to host a
      .margin-note-top annotation.  margin-top (not padding-top) keeps the
@@ -213,6 +212,7 @@ body {
 
 .letter-content p {
   margin: 0;
+  white-space: pre-line;
 }
 
 .letter-content p.boy {
@@ -290,10 +290,6 @@ body {
   margin: 0;
 }
 
-.letter-content p:has(> .margin-note-top),
-.letter-content p:empty:has(+ .margin-note-top) {
-  line-height: 0;
-}
 
 .letter-content .highlight {
   background: rgba(255, 80, 80, 0.35);
