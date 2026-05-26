@@ -171,6 +171,14 @@ body {
 .letter-content {
   line-height: 26px;
   white-space: pre-line;
+  position: relative;
+}
+
+/* When a top-margin annotation is present, push the ruled content down to
+   make room for it.  margin-top (not padding-top) is used so the
+   background-image / backgroundPositionY line grid is unaffected. */
+.letter-content:has(.margin-note-top) {
+  margin-top: 80px;
 }
 
 .letter-content.lined {
@@ -245,10 +253,17 @@ body {
 }
 
 .letter-content .margin-note-top {
-  display: block;
-  width: 100%;
-  margin-top: -12px;
-  margin-bottom: 10px;
+  /* Lifted out of flow into the reserved header zone above .letter-content */
+  position: absolute;
+  top: -80px;
+  left: 0;
+  right: 0;
+  height: 80px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Visual styles */
   font-family: 'Indie Flower', cursive;
   font-size: 11px;
   color: #5a4a3a;
@@ -258,6 +273,14 @@ body {
   border-bottom: 1px solid rgba(90,74,58,0.25);
   padding-bottom: 6px;
   text-align: center;
+}
+
+/* Prevent .sensei / .boy paragraph styles from overpowering the small annotation */
+.letter-content .margin-note-top p {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  margin: 0;
 }
 
 .letter-content .highlight {
