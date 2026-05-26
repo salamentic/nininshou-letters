@@ -7,19 +7,26 @@ import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
+/** Hash a string to a stable integer seed. */
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return Math.abs(h);
+}
+
 /** Deterministic value in [0, 1) from a seed + slot so stamp stays the same on re-open. */
 function seededRand(seed: number, slot: number): number {
   const x = Math.sin(seed * 127.1 + slot * 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
 
-function stampStyle(envelopeNumber: number): React.CSSProperties {
-  const r = (slot: number) => seededRand(envelopeNumber, slot);
-  const rotation  = r(0) * 36  - 18;          // –18° … +18°
-  const offsetX   = r(1) * 12  - 6;            // –6 … +6 px from right edge
-  const offsetY   = r(2) * 12  - 6;            // –6 … +6 px from bottom edge
-  const opacity   = 0.45 + r(3) * 0.55;        // 0.45 … 1.0  (ink strength)
-  const scale     = 0.85 + r(4) * 0.30;        // 0.85 … 1.15 (stamp size)
+function stampStyle(pageId: string): React.CSSProperties {
+  const r = (slot: number) => seededRand(hashStr(pageId), slot);
+  const rotation = r(0) * 36 - 18;        // –18° … +18°
+  const offsetX  = r(1) * 12 - 6;         // –6 … +6 px from right edge
+  const offsetY  = r(2) * 12 - 6;         // –6 … +6 px from bottom edge
+  const opacity  = 0.45 + r(3) * 0.55;   // 0.45 … 1.0 (ink strength)
+  const scale    = 0.85 + r(4) * 0.30;   // 0.85 … 1.15 (stamp size)
   return {
     position: 'absolute',
     bottom: offsetY,
@@ -152,6 +159,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
+      <img src="/flower.png" alt="" style={stampStyle(page.page)} />
       <p style={styles.label}>{page.page}</p>
       <div
         className={`letter-content ${page.pagetype}`}
@@ -335,7 +343,6 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
             ))}
           </div>
 
-          <img src="/flower.png" alt="" style={stampStyle(number)} />
           <div style={styles.footer}>
             <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
             {pages.map((_, i) => (
