@@ -170,7 +170,22 @@ body {
 /* ── Letter page content ── */
 .letter-content {
   line-height: 26px;
-  white-space: pre-line;
+  position: relative;
+  /* Consistent header zone above every page — large enough to host a
+     .margin-note-top annotation.  margin-top (not padding-top) keeps the
+     background-image / backgroundPositionY line grid unaffected. */
+  margin-top: 60px;
+}
+
+/* Top margin line — drawn at the boundary between the header zone and content */
+.letter-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid rgba(90,74,58,0.25);
+  pointer-events: none;
 }
 
 .letter-content.lined {
@@ -197,6 +212,7 @@ body {
 
 .letter-content p {
   margin: 0;
+  white-space: pre-line;
 }
 
 .letter-content p.boy {
@@ -245,20 +261,35 @@ body {
 }
 
 .letter-content .margin-note-top {
-  display: block;
-  width: 100%;
-  margin-top: -12px;
-  margin-bottom: 10px;
+  /* Lifted out of flow into the reserved header zone above .letter-content */
+  position: absolute;
+  top: -60px;
+  left: 0;
+  right: 0;
+  height: 60px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Visual styles */
   font-family: 'Indie Flower', cursive;
   font-size: 11px;
   color: #5a4a3a;
   opacity: 0.65;
   line-height: 1.35;
   transform: rotate(-0.8deg);
-  border-bottom: 1px solid rgba(90,74,58,0.25);
   padding-bottom: 6px;
   text-align: center;
 }
+
+/* Prevent .sensei / .boy paragraph styles from overpowering the small annotation */
+.letter-content .margin-note-top p {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  margin: 0;
+}
+
 
 .letter-content .highlight {
   background: rgba(255, 80, 80, 0.35);
@@ -301,7 +332,9 @@ body {
 
 /* ── Hover annotations ── */
 .letter-content .note {
-  border-bottom: 1px dashed currentColor;
+  text-decoration: underline dashed currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   cursor: help;
   position: relative;
 }

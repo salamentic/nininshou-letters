@@ -7,6 +7,39 @@ import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
+/** Hash a string to a stable integer seed. */
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return Math.abs(h);
+}
+
+/** Deterministic value in [0, 1) from a seed + slot so stamp stays the same on re-open. */
+function seededRand(seed: number, slot: number): number {
+  const x = Math.sin(seed * 127.1 + slot * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function stampStyle(pageId: string): React.CSSProperties {
+  const r = (slot: number) => seededRand(hashStr(pageId), slot);
+  const rotation = r(0) * 36 - 18;        // –18° … +18°
+  const offsetX  = r(1) * 12 - 6;         // –6 … +6 px from right edge
+  const offsetY  = r(2) * 12 - 6;         // –6 … +6 px from bottom edge
+  const opacity  = 0.45 + r(3) * 0.55;   // 0.45 … 1.0 (ink strength)
+  const scale    = 0.85 + r(4) * 0.30;   // 0.85 … 1.15 (stamp size)
+  return {
+    position: 'absolute',
+    bottom: offsetY,
+    right: offsetX,
+    width: 36,
+    height: 36,
+    pointerEvents: 'none',
+    opacity,
+    transform: `rotate(${rotation}deg) scale(${scale})`,
+    transformOrigin: 'center',
+  };
+}
+
 const htmlCache = new Map<string, string>();
 const ruleOffsetCache = new Map<string, number>();
 let sharedCanvas: HTMLCanvasElement | null = null;
@@ -64,31 +97,30 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
     document.fonts.ready.then(() => setRuleOffset(getRuleOffset(font)));
   }, [page.author]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const annotationsRef = useRef<any[]>([]);
+  // On initial modal open the page is already at its resting position so
+  // onAnimationComplete never fires — handle that case with a timer instead.
   useEffect(() => {
-    if (!ref.current || !html) return;
-    annotationsRef.current.forEach(a => a.remove());
-    annotationsRef.current = [];
+    if (i !== current || !ref.current || !html) return;
     const container = ref.current;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const next: any[] = [];
+    const t = setTimeout(() => drawAnnotations(container), 300);
+    return () => clearTimeout(t);
+  }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function drawAnnotations(container: HTMLElement) {
+    container.querySelectorAll('svg.rough-annotation').forEach(s => s.remove());
     container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
-      next.push(annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }))
+      annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }).show()
     );
     container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
-      next.push(annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+      annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
     );
     container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
-      next.push(annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }))
+      annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
     );
     container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
-      next.push(annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }))
+      annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }).show()
     );
-    next.forEach(a => a.show());
-    annotationsRef.current = next;
-    return () => { annotationsRef.current.forEach(a => a.remove()); annotationsRef.current = []; };
-  }, [html]);
+  }
 
   return (
     <motion.div
@@ -98,6 +130,9 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
       }}
       animate={pageAnimate(i, current, onFlip)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
+      onAnimationComplete={() => {
+        if (i === current && ref.current && html) drawAnnotations(ref.current);
+      }}
       className="letter-page"
       style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}) }}
     >
@@ -107,6 +142,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language }: {
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
+      <img src="/flower.png" alt="" style={stampStyle(page.page)} />
       <p style={styles.label}>{page.page}</p>
       <div
         className={`letter-content ${page.pagetype}`}
@@ -290,7 +326,6 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
             ))}
           </div>
 
-          <img src="/flower.png" alt="" style={styles.cornerIcon} />
           <div style={styles.footer}>
             <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
             {pages.map((_, i) => (
@@ -325,8 +360,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressBar: { position: 'sticky', top: 0, height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { fontSize: 18, color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive", opacity: 0.6 },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
-  cornerIcon:  { position: 'absolute', bottom: 0, right: 0, width: 36, height: 36, pointerEvents: 'none' },
-  navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
+navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 32, height: 32, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 14, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },
 };
