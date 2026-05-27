@@ -143,8 +143,17 @@ body {
   }
   .letter-page .letter-content {
     padding-left: 110px;
-    min-width: calc(100% + 150px);
+    padding-right: 130px;
+    min-width: calc(100% + 280px);
   }
+  .stamp-wrapper {
+    margin-right: 0;
+    min-width: calc(100% + 280px);
+  }
+}
+
+.stamp-wrapper {
+  margin-right: calc(-1 * var(--lp, 130px));
 }
 
 @media (min-width: 641px) and (max-width: 900px) {
@@ -196,6 +205,7 @@ body {
     transparent 1px,
     transparent calc(26px * var(--lc-scale, 1))
   );
+  background-clip: content-box;
 }
 
 .letter-content.manuscript {
@@ -206,6 +216,7 @@ body {
     transparent 1px,
     transparent calc(26px * var(--lc-scale, 1))
   );
+  background-clip: content-box;
 }
 
 .letter-content p {

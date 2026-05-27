@@ -20,23 +20,33 @@ function seededRand(seed: number, slot: number): number {
   return x - Math.floor(x);
 }
 
-function stampStyle(pageId: string): React.CSSProperties {
+function stampStyles(pageId: string): { wrapper: React.CSSProperties; img: React.CSSProperties } {
   const r = (slot: number) => seededRand(hashStr(pageId), slot);
-  const rotation = r(0) * 36 - 18;        // –18° … +18°
-  const offsetX  = r(1) * 12 - 6;         // –6 … +6 px from right edge
-  const offsetY  = r(2) * 12 - 6;         // –6 … +6 px from bottom edge
-  const opacity  = 0.45 + r(3) * 0.55;   // 0.45 … 1.0 (ink strength)
-  const scale    = 0.85 + r(4) * 0.30;   // 0.85 … 1.15 (stamp size)
+  const rotation = r(0) * 36 - 18;
+  const offsetX  = Math.round(r(1) * 8 + 4);   // 4 … 12 px from right edge
+  const offsetY  = Math.round(r(2) * 8);        // 0 … 8 px from bottom edge
+  const opacity  = 0.45 + r(3) * 0.55;
+  const scale    = 0.85 + r(4) * 0.30;
   return {
-    position: 'absolute',
-    bottom: offsetY,
-    right: offsetX,
-    width: 36,
-    height: 36,
-    pointerEvents: 'none',
-    opacity,
-    transform: `rotate(${rotation}deg) scale(${scale})`,
-    transformOrigin: 'center',
+    // In-flow wrapper replaces letter-page's padding-bottom (40px).
+    // position:relative makes this the containing block for the flower,
+    // so bottom/right are relative to the wrapper, not the viewport.
+    wrapper: {
+      position: 'relative',
+      height: 40,
+      flexShrink: 0,
+    },
+    img: {
+      position: 'absolute',
+      bottom: 4 + offsetY,
+      right: 4 + offsetX,
+      width: 36,
+      height: 36,
+      pointerEvents: 'none',
+      opacity,
+      transform: `rotate(${rotation}deg) scale(${scale})`,
+      transformOrigin: 'center',
+    },
   };
 }
 
@@ -151,16 +161,17 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fon
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
-      <img src="/flower.png" alt="" style={stampStyle(page.page)} />
       <p style={styles.label}>{page.page}</p>
       <div
         className={`letter-content ${page.pagetype}`}
         style={{
           '--lc-scale': fontScale,
           backgroundPositionY: ruleOffset !== null ? `${(ruleOffset + 4) * fontScale}px` : undefined,
+          flexGrow: 1,
         } as React.CSSProperties}
         dangerouslySetInnerHTML={{ __html: html ?? '' }}
       />
+      {(() => { const s = stampStyles(page.page); return <div className="stamp-wrapper" style={s.wrapper}><img src="/flower.png" alt="" style={s.img} /></div>; })()}
     </motion.div>
   );
 }
@@ -373,7 +384,7 @@ const styles: Record<string, React.CSSProperties> = {
   modal:       { background: '#f5e6c8', borderRadius: 12, width: '80vw', height: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   header:      { padding: '14px 16px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
-  page:        { position: 'absolute', inset: 0, transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8' },
+  page:        { position: 'absolute', inset: 0, transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' },
   manuscript:  {
     backgroundImage: [
       "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.07'/></svg>\")",
