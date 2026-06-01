@@ -171,7 +171,18 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fon
         } as React.CSSProperties}
         dangerouslySetInnerHTML={{ __html: html ?? '' }}
       />
-      {(() => { const s = stampStyles(page.page); return <div className="stamp-wrapper" style={s.wrapper}><img src="/flower.png" alt="" style={s.img} /></div>; })()}
+      {(() => {
+        const s = stampStyles(page.page);
+        const stampStyle = page.page === '1-1'
+          ? {
+              ...s.img,
+              border: '1.5px solid #5a4a3a',
+              borderRadius: '50%',
+              background: 'transparent',
+            }
+          : s.img;
+        return <div className="stamp-wrapper" style={s.wrapper}><img src="/flower.png" alt="" style={stampStyle} /></div>;
+      })()}
     </motion.div>
   );
 }
