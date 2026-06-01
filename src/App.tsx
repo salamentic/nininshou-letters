@@ -223,36 +223,24 @@ export default function App() {
         {currentEnvelope > 0 && (
           <button
             onClick={() => navigate('previous')}
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-50
-                      w-10 h-10 flex items-center justify-center
-                      rounded-full
-                      bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)]
-                      text-[#5a4a3a] text-xl
-                      shadow-md hover:shadow-lg
-                      backdrop-blur-sm
-                      transition-all duration-200
-                      border border-[#c4a882]/40"
+            style={{ position: 'fixed', left: 0, top: 0, height: '100vh', width: 'calc(50vw - 200px)', zIndex: 40, background: 'transparent' }}
             aria-label="Previous envelope"
           >
-            ‹
+            <span style={{ left: '22vw' }} className="absolute top-1/2 -translate-y-1/2 rounded-full bg-[rgba(245,230,200,0.85)] border border-[#c4a882]/40 w-16 h-16 flex items-center justify-center text-4xl text-[#5a4a3a] shadow-md shadow-[#0000001a] transition-all duration-200 hover:bg-[rgba(245,230,200,0.95)]">
+              ‹
+            </span>
           </button>
         )}
         {/* Right Arrow */}
         {currentEnvelope < ENVELOPE_COUNT - 1 && (
           <button
             onClick={() => navigate('next')}
-            className="fixed right-4 top-1/2 -translate-y-1/2 z-50
-                      w-10 h-10 flex items-center justify-center
-                      rounded-full
-                      bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)]
-                      text-[#5a4a3a] text-xl
-                      shadow-md hover:shadow-lg
-                      backdrop-blur-sm
-                      transition-all duration-200
-                      border border-[#c4a882]/40"
+            style={{ position: 'fixed', right: 0, top: 0, height: '100vh', width: 'calc(50vw - 200px)', zIndex: 40, background: 'transparent' }}
             aria-label="Next envelope"
           >
-            ›
+            <span style={{ right: '22vw' }} className="absolute top-1/2 -translate-y-1/2 rounded-full bg-[rgba(245,230,200,0.85)] border border-[#c4a882]/40 w-16 h-16 flex items-center justify-center text-4xl text-[#5a4a3a] shadow-md shadow-[#0000001a] transition-all duration-200 hover:bg-[rgba(245,230,200,0.95)]">
+              ›
+            </span>
           </button>
         )}
     </>
