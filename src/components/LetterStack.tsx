@@ -51,23 +51,6 @@ function stampStyles(pageId: string): { wrapper: React.CSSProperties; img: React
 }
 
 const htmlCache = new Map<string, string>();
-const ruleOffsetCache = new Map<string, number>();
-let sharedCanvas: HTMLCanvasElement | null = null;
-
-const LINE_HEIGHT = 26;
-
-function getRuleOffset(font: string): number {
-  if (ruleOffsetCache.has(font)) return ruleOffsetCache.get(font)!;
-  if (!sharedCanvas) sharedCanvas = document.createElement('canvas');
-  const ctx = sharedCanvas.getContext('2d')!;
-  ctx.font = font;
-  const ascent = ctx.measureText('あMg').actualBoundingBoxAscent;
-  const fontSize = parseFloat(font);
-  const halfLeading = (LINE_HEIGHT - fontSize) / 2;
-  const offset = halfLeading + ascent;
-  ruleOffsetCache.set(font, offset);
-  return offset;
-}
 
 interface Props {
   onClose: () => void;
@@ -76,20 +59,18 @@ interface Props {
   language: string;
 }
 
-function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fontScale }: {
+function LetterPage({ page, i, current, total, setPageRef, language, fontScale }: {
   page: Letter;
   i: number;
   current: number;
   total: number;
   setPageRef: (el: HTMLDivElement | null) => void;
-  onFlip: () => void;
   language: string;
   fontScale: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const cacheKey = `${language}/${page.page}`;
   const [html, setHtml] = useState<string | null>(htmlCache.get(cacheKey) ?? null);
-  const [ruleOffset, setRuleOffset] = useState<number | null>(null);
 
   useEffect(() => {
     if (htmlCache.has(cacheKey)) { setHtml(htmlCache.get(cacheKey)!); return; }
@@ -102,11 +83,6 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fon
         setHtml(fallback);
       });
   }, [cacheKey]);
-
-  useEffect(() => {
-    const font = page.author === 'sensei' ? '18px "La Belle Aurore"' : '16px Caveat';
-    document.fonts.ready.then(() => setRuleOffset(getRuleOffset(font)));
-  }, [page.author]);
 
   // On initial modal open the page is already at its resting position so
   // onAnimationComplete never fires — handle that case with a timer instead.
@@ -147,7 +123,7 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fon
         (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
         setPageRef(el);
       }}
-      animate={pageAnimate(i, current, onFlip)}
+      animate={pageAnimate(i, current)}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
       onAnimationComplete={() => {
         if (i === current && ref.current && html) drawAnnotations(ref.current);
@@ -166,7 +142,6 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fon
         className={`letter-content ${page.pagetype}`}
         style={{
           '--lc-scale': fontScale,
-          backgroundPositionY: ruleOffset !== null ? `${(ruleOffset + 4) * fontScale}px` : undefined,
           flexGrow: 1,
         } as React.CSSProperties}
         dangerouslySetInnerHTML={{ __html: html ?? '' }}
@@ -176,10 +151,9 @@ function LetterPage({ page, i, current, total, setPageRef, onFlip, language, fon
   );
 }
 
-function pageAnimate(i: number, current: number, soundFn: () => void) {
+function pageAnimate(i: number, current: number) {
   if (i >= current) return { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 };
   const off = current - i;
-  soundFn();
   return {
     x: `${-82 - off * 2}%`,
     y: `${-78 - off * 2}%`,
@@ -194,6 +168,8 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
   const [current, setCurrent] = useState(initialPage);
   const [fontScale, setFontScale] = useState(1.0);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
+  const playFlipRef = useRef(playFlip);
+  useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -207,6 +183,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
   const navigatePage = useCallback((dir: 1 | -1) => {
     dirRef.current = dir;
+    playFlipRef.current();
     setCurrent(c => dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0));
   }, [pages.length]);
 
@@ -280,11 +257,13 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
         accumRef.current = -60;
         lastFlipTime.current = now;
         dirRef.current = 1;
+        playFlipRef.current();
         setCurrent(c => Math.min(c + 1, pages.length - 1));
       } else if (accumRef.current < -150) {
         accumRef.current = 60;
         lastFlipTime.current = now;
         dirRef.current = -1;
+        playFlipRef.current();
         setCurrent(c => Math.max(c - 1, 0));
       }
     };
@@ -298,91 +277,71 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
   return createPortal(
     <motion.div
-      style={styles.overlay}
-      onClick={onClose}
+      ref={modalRef}
+      role="dialog"
+      tabIndex={-1}
+      style={styles.fullPage}
       onTouchStart={e => e.stopPropagation()}
       onTouchMove={e => e.stopPropagation()}
       onTouchEnd={e => e.stopPropagation()}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ type: 'tween', duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
     >
-      <motion.div
-        ref={modalRef}
-        role="dialog"
-        tabIndex={-1}
-        style={{ ...styles.modal, position: 'relative' }}
-        onClick={e => e.stopPropagation()}
-        initial={{ scaleX: 0, scaleY: 0.005 }}
-        animate={{ scaleX: [0, 1, 1], scaleY: [0.005, 0.005, 1] }}
-        exit={{ scaleX: [1, 1, 0], scaleY: [1, 0.005, 0.005] }}
-        transition={{ duration: 0.6, times: [0, 0.5, 1], ease: [0.165, 0.84, 0.44, 1] }}
-      >
-        <motion.div
-          style={{ display: 'contents' }}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.2, delay: 0.45 }}
-        >
-          <div style={styles.header}>
-            <span>Envelope {number}{envelopeDate ? `, ${envelopeDate}` : ''}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                onClick={() => setFontScale(s => Math.max(0.75, +(s - 0.125).toFixed(3)))}
-                style={styles.fontBtn}
-                className="btn-nav desktop-only"
-                disabled={fontScale <= 0.75}
-              >A−</button>
-              <button
-                onClick={() => setFontScale(s => Math.min(1.5, +(s + 0.125).toFixed(3)))}
-                style={styles.fontBtn}
-                className="btn-nav desktop-only"
-                disabled={fontScale >= 1.5}
-              >A+</button>
-              <button
-                onClick={onClose}
-                style={styles.closeBtn}
-                className="btn-close"
-              >✕</button>
-            </div>
-          </div>
+      <div style={styles.header}>
+        <span>Envelope {number}{envelopeDate ? `, ${envelopeDate}` : ''}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            onClick={() => setFontScale(s => Math.max(0.75, +(s - 0.125).toFixed(3)))}
+            style={styles.fontBtn}
+            className="btn-nav desktop-only"
+            disabled={fontScale <= 0.75}
+          >A−</button>
+          <button
+            onClick={() => setFontScale(s => Math.min(1.5, +(s + 0.125).toFixed(3)))}
+            style={styles.fontBtn}
+            className="btn-nav desktop-only"
+            disabled={fontScale >= 1.5}
+          >A+</button>
+          <button
+            onClick={onClose}
+            style={styles.closeBtn}
+            className="btn-close"
+          >✕</button>
+        </div>
+      </div>
 
-          <div style={styles.stack}>
-            {pages.map((page, i) => (
-              <LetterPage
-                key={page.page}
-                page={page}
-                i={i}
-                current={current}
-                total={pages.length}
-                setPageRef={el => { pageRefs.current[i] = el; }}
-                onFlip={playFlip}
-                language={language}
-                fontScale={fontScale}
-              />
-            ))}
-          </div>
+      <div style={styles.stack}>
+        {pages.map((page, i) => (
+          <LetterPage
+            key={page.page}
+            page={page}
+            i={i}
+            current={current}
+            total={pages.length}
+            setPageRef={el => { pageRefs.current[i] = el; }}
+            language={language}
+            fontScale={fontScale}
+          />
+        ))}
+      </div>
 
-          <div style={styles.footer}>
-            <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
-            {pages.map((_, i) => (
-              <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
-            ))}
-            <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(1)} disabled={current === pages.length - 1}>›</button>
-          </div>
-        </motion.div>
-      </motion.div>
+      <div style={styles.footer}>
+        <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
+        {pages.map((_, i) => (
+          <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
+        ))}
+        <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(1)} disabled={current === pages.length - 1}>›</button>
+      </div>
     </motion.div>,
     document.body
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay:     { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
-  modal:       { background: '#f5e6c8', borderRadius: 12, width: '80vw', height: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-  header:      { padding: '14px 16px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
+  fullPage:    { position: 'fixed', inset: 0, background: '#f5e6c8', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 100 },
+  header:      { padding: '14px 16px 14px 72px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
   page:        { position: 'absolute', inset: 0, transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' },
   manuscript:  {
