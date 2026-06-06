@@ -152,7 +152,6 @@ function AppContent() {
             isLetterOpen={isLetterOpen && letterNumber === i + 1}
             onOpenLetter={openLetter}
             onCloseLetter={closeLetter}
-            onPlaySound={playEnvelopeSound}
           />
         ))}
       </EnvelopeStackScrollable>
