@@ -63,19 +63,20 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
   setPageRef: (el: HTMLDivElement | null) => void;
   language: string;
   fontScale: number;
+  onFlip?: () => void;
   onLineMeasure?: (lineCount: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const cacheKey = `${language}/${page.page}`;
+  const cacheKey = `${language}/${page.paired_with || page.page}`;
   const [html, setHtml] = useState<string | null>(htmlCache.get(cacheKey) ?? null);
 
   useEffect(() => {
     if (htmlCache.has(cacheKey)) { setHtml(htmlCache.get(cacheKey)!); return; }
-    fetch(`/letters/${language}/${page.page}.html`)
+    fetch(`/letters/${language}/${page.paired_with || page.page}.html`)
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(text => { htmlCache.set(cacheKey, text); setHtml(text); })
       .catch(() => {
-        const fallback = `<p class="annotation">(page not found: ${page.page})</p>`;
+        const fallback = `<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`;
         htmlCache.set(cacheKey, fallback);
         setHtml(fallback);
       });
@@ -139,7 +140,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
-      <p style={styles.label}>{page.page}</p>
+      <p style={styles.label}>{page.paired_with || page.page}</p>
       <div
         className={`letter-content ${page.pagetype}`}
         style={{
@@ -324,12 +325,13 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
       <div ref={stackRef} style={styles.stack}>
         {pages.map((page, i) => (
           <LetterPage
-            key={page.page}
+            key={page.paired_with || page.page}
             page={page}
             i={i}
             current={current}
             total={pages.length}
             setPageRef={el => { pageRefs.current[i] = el; }}
+            onFlip={playFlip}
             language={language}
             fontScale={fontScale}
             onLineMeasure={handleLineMeasure}

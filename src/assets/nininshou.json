@@ -524,16 +524,6 @@
         "stamp": false,
         "translated_by": "",
         "body": ""
-      },
-      {
-        "envelope": 8,
-        "page": "8-3",
-        "date": "5/19",
-        "author": "boy",
-        "pagetype": "manuscript",
-        "stamp": false,
-        "translated_by": "",
-        "body": ""
       }
     ]
   },
@@ -1602,7 +1592,7 @@
         "stamp": false,
         "translated_by": "",
         "body": "",
-        "paired_with": "13-8 (Other half of the page that was cut)"
+        "paired_with": "13-8(2)"
       },
       {
         "envelope": 29,
@@ -1635,7 +1625,7 @@
         "stamp": false,
         "translated_by": "",
         "body": "",
-        "paired_with": "8/9 (1)"
+        "paired_with": "8／9(1)"
       },
       {
         "envelope": 29,
@@ -1646,7 +1636,7 @@
         "stamp": false,
         "translated_by": "",
         "body": "",
-        "paired_with": "8/9 (2)"
+        "paired_with": "8／9(2)"
       },
       {
         "envelope": 29,
