@@ -89,14 +89,14 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
     document.fonts.ready.then(async () => {
       const div = document.createElement('div');
       div.innerHTML = html;
-      let totalLines = 0;
-      for (const p of div.querySelectorAll<HTMLElement>('p.boy, p.sensei')) {
+      const paragraphs = [...div.querySelectorAll<HTMLElement>('p.boy, p.sensei')];
+      const counts = await Promise.all(paragraphs.map(async p => {
         const font = p.classList.contains('sensei') ? '18px "La Belle Aurore"' : '16px Caveat';
         const text = p.textContent ?? '';
-        if (!text.trim()) continue;
-        const { lineCount } = layout(await prepare(text, font), containerWidth, 26);
-        totalLines += lineCount;
-      }
+        if (!text.trim()) return 0;
+        return layout(await prepare(text, font), containerWidth, 26).lineCount;
+      }));
+      const totalLines = counts.reduce((a, b) => a + b, 0);
       if (totalLines > 0) onLineMeasure?.(totalLines);
     });
   }, [html, i, current]); // eslint-disable-line react-hooks/exhaustive-deps
