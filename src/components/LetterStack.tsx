@@ -72,6 +72,8 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
   const [html, setHtml] = useState<string | null>(htmlCache.get(cacheKey) ?? null);
 
   useEffect(() => {
+    if (Math.abs(i - current) > 1) return;
+    if (html) return;
     if (htmlCache.has(cacheKey)) { setHtml(htmlCache.get(cacheKey)!); return; }
     fetch(`/letters/${language}/${page.paired_with || page.page}.html`)
       .then(r => r.ok ? r.text() : Promise.reject())
@@ -81,7 +83,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
         htmlCache.set(cacheKey, fallback);
         setHtml(fallback);
       });
-  }, [cacheKey]);
+  }, [cacheKey, i, current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (i !== current || !html || !ref.current) return;
