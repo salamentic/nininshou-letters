@@ -5,6 +5,7 @@ import 'vanilla-rough-notation';
 import { prepare, layout } from '@chenglou/pretext';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
+import { getCookie, setCookie } from '@/lib/cookies';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
@@ -169,7 +170,8 @@ function pageAnimate(i: number, current: number) {
 export default function LetterStack({ onClose, number, initialPage = 0, language }: Props) {
   const pages = useMemo(() => getEnvelopePages(number), [number]);
   const [current, setCurrent] = useState(initialPage);
-  const [fontScale, setFontScale] = useState(1.0);
+  const [fontScale, setFontScale] = useState(() => parseFloat(getCookie('fontScale') ?? '') || 1.0);
+  useEffect(() => { setCookie('fontScale', String(fontScale)); }, [fontScale]);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
   const playFlipRef = useRef(playFlip);
   useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
