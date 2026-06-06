@@ -166,22 +166,23 @@ export default function App() {
             <span><kbd style={styles.kbd}>esc</kbd> close</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            style={{ ...styles.buyLink, fontSize: 16, padding: '6px 14px' }}
-            className="btn-buy"
-            onClick={() => setCreditsOpen(true)}
-          >
-            Credits
-          </button>
-          <select
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            style={styles.langSelect}
-          >
-            <option value="en">EN</option>
-          </select>
-        </div>
+      </div>
+
+      <div style={{ position: 'fixed', top: 28, right: 28, zIndex: 50, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button
+          style={{ ...styles.buyLink, fontSize: 16, padding: '6px 14px' }}
+          className="btn-buy"
+          onClick={() => setCreditsOpen(true)}
+        >
+          Credits
+        </button>
+        <select
+          value={language}
+          onChange={e => setLanguage(e.target.value)}
+          style={styles.langSelect}
+        >
+          <option value="en">EN</option>
+        </select>
       </div>
       <AnimatePresence>
         {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}

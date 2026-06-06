@@ -186,10 +186,22 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
   const envelopeDate = getEnvelopeDate(number);
 
   const navigatePage = useCallback((dir: 1 | -1) => {
-    dirRef.current = dir;
-    playFlipRef.current();
-    setCurrent(c => dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0));
+    setCurrent(c => {
+      const next = dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0);
+      if (next === c) return c;
+      dirRef.current = dir;
+      playFlipRef.current();
+      return next;
+    });
   }, [pages.length]);
+
+  const scrollCurrentPage = useCallback((delta: number) => {
+    const pageEl = pageRefs.current[current];
+    if (!pageEl) return;
+    const maxScrollTop = pageEl.scrollHeight - pageEl.clientHeight;
+    const nextTop = Math.max(0, Math.min(pageEl.scrollTop + delta, maxScrollTop));
+    if (nextTop !== pageEl.scrollTop) pageEl.scrollTo({ top: nextTop, behavior: 'smooth' });
+  }, [current]);
 
   // progressBar(31) + label(38) + letter-content margin-top(60) + stamp(40) = 169px
   const OVERHEAD = 169;
@@ -208,10 +220,12 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
       if (e.key === 'Escape') { onClose(); return; }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigatePage(1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); navigatePage(-1); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); scrollCurrentPage(180); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); scrollCurrentPage(-180); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, navigatePage]);
+  }, [onClose, navigatePage, scrollCurrentPage]);
 
   useEffect(() => {
     const pageEl = pageRefs.current[current];
@@ -266,15 +280,11 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
       if (accumRef.current > 150) {
         accumRef.current = -60;
         lastFlipTime.current = now;
-        dirRef.current = 1;
-        playFlipRef.current();
-        setCurrent(c => Math.min(c + 1, pages.length - 1));
+        navigatePage(1);
       } else if (accumRef.current < -150) {
         accumRef.current = 60;
         lastFlipTime.current = now;
-        dirRef.current = -1;
-        playFlipRef.current();
-        setCurrent(c => Math.max(c - 1, 0));
+        navigatePage(-1);
       }
     };
 
@@ -283,7 +293,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
       el.removeEventListener('wheel', onWheel);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  }, [pages.length]);
+  }, [navigatePage]);
 
   return createPortal(
     <motion.div

@@ -32,6 +32,7 @@ export default function CreditsModal({ onClose }: Props) {
           <div style={styles.column}>
             <p style={styles.colHeading}>Translation</p>
             <p style={styles.note}>Letters &amp; lyrics from 二人称 by Yorushika</p>
+            <p style={styles.note}>Translated by [Odorushika Translation Team]</p>
           </div>
 
           <div style={styles.divider} />
