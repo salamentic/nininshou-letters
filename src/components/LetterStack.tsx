@@ -141,7 +141,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
-      <p style={styles.label}>{page.paired_with || page.page}</p>
+      <p style={{ ...styles.label, fontSize: 16 * fontScale }}>{page.paired_with || page.page}</p>
       <div
         className={`letter-content ${page.pagetype}`}
         style={{
@@ -385,7 +385,7 @@ const styles: Record<string, React.CSSProperties> = {
     ].join(', '),
   } as React.CSSProperties,
   progressBar: { position: 'sticky', top: 0, height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
-  label:       { fontSize: 18, color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive", opacity: 0.6 },
+  label:       { color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive" },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
 navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '0 12px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 38, height: 38, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 16, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
