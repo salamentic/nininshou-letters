@@ -1,3 +1,4 @@
+import { BrowserRouter, Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import useSound from 'use-sound';
@@ -8,6 +9,7 @@ import Envelope, { type EnvelopeHandle } from './components/Envelope';
 import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
 import BurgerMenu from './components/BurgerMenu';
 import SpotifyPlayer from './components/SpotifyPlayer';
+import LetterStack from './components/LetterStack';
 import spotifyData from './assets/spotify_embeds.json';
 import { getCookie, setCookie } from './lib/cookies';
 import CreditsModal from './components/CreditsModal';
@@ -16,32 +18,39 @@ const ENVELOPE_COUNT = 32;
 const BG_IMAGES = new Set([0, 1, 2, 3, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 31]);
 const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.png`;
 
-export default function App() {
+function AppContent() {
+  const { num } = useParams<{ num?: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const letterNumber = num ? (parseInt(num) || null) : null;
+  const isLetterOpen = letterNumber !== null && letterNumber >= 1 && letterNumber <= ENVELOPE_COUNT;
+  const initialPage = parseInt(new URLSearchParams(location.search).get('page') ?? '0') || 0;
+
+  // Current envelope in the stack — local state, URL plays no role here
   const [currentEnvelope, setCurrentEnvelope] = useState(() => {
+    if (letterNumber) return Math.max(0, Math.min(ENVELOPE_COUNT - 1, letterNumber - 1));
     const saved = parseInt(getCookie('lastEnvelope') ?? '');
     return Number.isFinite(saved) && saved >= 0 && saved < ENVELOPE_COUNT ? saved : 0;
   });
+
   const spotifyLink = useMemo(
     () => (spotifyData as Record<string, string>)[currentEnvelope] ?? null,
     [currentEnvelope]
   );
-  const [triggerPage, setTriggerPage] = useState<{
-    envelopeIndex: number;
-    pageIndex: number;
-    ts: number;
-  } | null>(null);
-  const [closeSignal, setCloseSignal] = useState(0);
+
   const envelopeRefs = useRef<(EnvelopeHandle | null)[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
-  useSound(flipSound, { volume: 0.05 }); // Preload flip sound
+  useSound(flipSound, { volume: 0.05 });
+  const playEnvelopeSoundRef = useRef(playEnvelopeSound);
+  useEffect(() => { playEnvelopeSoundRef.current = playEnvelopeSound; }, [playEnvelopeSound]);
   const [ready, setReady] = useState(false);
 
-  // Single ref for stale-closure-free keydown handler
-  const handlerStateRef = useRef({ currentEnvelope, menuOpen });
-  useEffect(() => { handlerStateRef.current = { currentEnvelope, menuOpen }; }, [currentEnvelope, menuOpen]);
+  const stateRef = useRef({ currentEnvelope, isLetterOpen, menuOpen });
+  useEffect(() => { stateRef.current = { currentEnvelope, isLetterOpen, menuOpen }; }, [currentEnvelope, isLetterOpen, menuOpen]);
 
   useEffect(() => { setCookie('lastEnvelope', String(currentEnvelope)); }, [currentEnvelope]);
 
@@ -51,39 +60,39 @@ export default function App() {
     Promise.all([document.fonts.ready, img.decode()]).then(() => setReady(true));
   }, []);
 
-  const openMenu = useCallback(() => {
-    setCloseSignal(s => s + 1);
-    setMenuOpen(true);
-  }, []);
+  const openLetter = useCallback((envelopeNumber: number, page = 0) => {
+    playEnvelopeSoundRef.current();
+    navigate(`/envelope/${envelopeNumber}${page > 0 ? `?page=${page}` : ''}`);
+  }, [navigate]);
+
+  const closeLetter = useCallback(() => {
+    playEnvelopeSoundRef.current();
+    navigate('/', { replace: true });
+  }, [navigate]);
 
   const handlePageSelect = useCallback(({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
     setCurrentEnvelope(envelopeIndex);
-    setTriggerPage({ envelopeIndex, pageIndex, ts: Date.now() });
-  }, []);
+    openLetter(envelopeIndex + 1, pageIndex);
+  }, [openLetter]);
 
-  const navigate = useCallback((direction: 'previous' | 'next') => {
-    setCurrentEnvelope(prev =>
-      direction === 'previous' ? Math.max(0, prev - 1) : Math.min(ENVELOPE_COUNT - 1, prev + 1)
-    );
-  }, []);
-
+  // Tab + Space only (EnvelopeStackScrollable owns arrow keys + scroll)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      const { currentEnvelope: ce, isLetterOpen: ilo, menuOpen: mo } = stateRef.current;
       if (e.key === 'Tab') {
         e.preventDefault();
-        if (handlerStateRef.current.menuOpen) setMenuOpen(false);
-        else openMenu();
+        setMenuOpen(m => !m);
         return;
       }
-      if (document.querySelector('[role="dialog"]')) return;
+      if (ilo) return;
       if (e.key === ' ') {
         e.preventDefault();
-        envelopeRefs.current[handlerStateRef.current.currentEnvelope]?.pressSpace();
+        envelopeRefs.current[ce]?.pressSpace();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [openMenu]);
+  }, []);
 
   return (
     <>
@@ -94,22 +103,17 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
             style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 9999,
-              background: '#f5e6c8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: '"Cookie", cursive',
-              fontSize: 32,
-              color: '#5a4a3a',
+              position: 'fixed', inset: 0, zIndex: 9999,
+              background: '#f5e6c8', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              fontFamily: '"Cookie", cursive', fontSize: 32, color: '#5a4a3a',
             }}
           >
             二人称
           </motion.div>
         )}
       </AnimatePresence>
+
       <AnimatePresence>
         <motion.div
           key={currentEnvelope}
@@ -118,25 +122,23 @@ export default function App() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
           style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: -1,
+            position: 'fixed', inset: 0, zIndex: -1,
             backgroundImage: `url(${bgImage(currentEnvelope)})`,
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'auto',
-            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat', backgroundSize: 'auto', backgroundPosition: 'center',
           }}
         />
       </AnimatePresence>
+
       <BurgerMenu
         currentEnvelope={currentEnvelope}
         onSelect={setCurrentEnvelope}
         onPageSelect={handlePageSelect}
-        onOpen={openMenu}
+        onOpen={() => setMenuOpen(true)}
         envelopeCount={ENVELOPE_COUNT}
         open={menuOpen}
         onOpenChange={setMenuOpen}
       />
+
       <EnvelopeStackScrollable
         selectedIndex={currentEnvelope}
         onIndexChange={setCurrentEnvelope}
@@ -147,10 +149,10 @@ export default function App() {
             key={i}
             ref={el => { envelopeRefs.current[i] = el; }}
             number={i + 1}
-            triggerPage={triggerPage?.envelopeIndex === i ? triggerPage : null}
-            closeSignal={closeSignal}
+            isLetterOpen={isLetterOpen && letterNumber === i + 1}
+            onOpenLetter={openLetter}
+            onCloseLetter={closeLetter}
             onPlaySound={playEnvelopeSound}
-            language={language}
           />
         ))}
       </EnvelopeStackScrollable>
@@ -184,12 +186,15 @@ export default function App() {
           <option value="en">EN</option>
         </select>
       </div>
+
       <AnimatePresence>
         {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
       </AnimatePresence>
 
       <nav style={styles.tabs}>
-        {currentEnvelope > 1 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
+        {currentEnvelope > 1 && (
+          <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={() => setMenuOpen(true)}>…</button>
+        )}
         {[-1, 0, 1].map(offset => {
           const i = currentEnvelope + offset;
           if (i < 0 || i >= ENVELOPE_COUNT) return null;
@@ -204,8 +209,11 @@ export default function App() {
             </button>
           );
         })}
-        {currentEnvelope < ENVELOPE_COUNT - 2 && <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={openMenu}>…</button>}
+        {currentEnvelope < ENVELOPE_COUNT - 2 && (
+          <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={() => setMenuOpen(true)}>…</button>
+        )}
       </nav>
+
       <div className="desktop-only" style={{ position: 'fixed', bottom: 80, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
         <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
           Original site →
@@ -219,132 +227,84 @@ export default function App() {
         </a>
       </div>
 
-        {/* Left Arrow */}
-        {currentEnvelope > 0 && (
-          <button
-            onClick={() => navigate('previous')}
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-50
-                      w-10 h-10 flex items-center justify-center
-                      rounded-full
-                      bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)]
-                      text-[#5a4a3a] text-xl
-                      shadow-md hover:shadow-lg
-                      backdrop-blur-sm
-                      transition-all duration-200
-                      border border-[#c4a882]/40"
-            aria-label="Previous envelope"
-          >
-            ‹
-          </button>
+      {currentEnvelope > 0 && (
+        <button
+          onClick={() => setCurrentEnvelope(c => Math.max(0, c - 1))}
+          className="fixed left-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)] text-[#5a4a3a] text-xl shadow-md hover:shadow-lg backdrop-blur-sm transition-all duration-200 border border-[#c4a882]/40"
+          aria-label="Previous envelope"
+        >‹</button>
+      )}
+      {currentEnvelope < ENVELOPE_COUNT - 1 && (
+        <button
+          onClick={() => setCurrentEnvelope(c => Math.min(ENVELOPE_COUNT - 1, c + 1))}
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)] text-[#5a4a3a] text-xl shadow-md hover:shadow-lg backdrop-blur-sm transition-all duration-200 border border-[#c4a882]/40"
+          aria-label="Next envelope"
+        >›</button>
+      )}
+
+      <AnimatePresence>
+        {isLetterOpen && (
+          <LetterStack
+            key="letter-stack"
+            number={letterNumber!}
+            onClose={closeLetter}
+            initialPage={initialPage}
+            language={language}
+          />
         )}
-        {/* Right Arrow */}
-        {currentEnvelope < ENVELOPE_COUNT - 1 && (
-          <button
-            onClick={() => navigate('next')}
-            className="fixed right-4 top-1/2 -translate-y-1/2 z-50
-                      w-10 h-10 flex items-center justify-center
-                      rounded-full
-                      bg-[rgba(245,230,200,0.7)] hover:bg-[rgba(245,230,200,0.95)]
-                      text-[#5a4a3a] text-xl
-                      shadow-md hover:shadow-lg
-                      backdrop-blur-sm
-                      transition-all duration-200
-                      border border-[#c4a882]/40"
-            aria-label="Next envelope"
-          >
-            ›
-          </button>
-        )}
+      </AnimatePresence>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppContent />} />
+        <Route path="/envelope/:num" element={<AppContent />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
   tabs: {
-    position: 'fixed',
-    bottom: 24,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    gap: 6,
-    background: 'rgba(245,230,200,0.75)',
-    backdropFilter: 'blur(8px)',
-    borderRadius: 999,
-    padding: '6px 10px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+    position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+    display: 'flex', gap: 6, background: 'rgba(245,230,200,0.75)',
+    backdropFilter: 'blur(8px)', borderRadius: 999, padding: '6px 10px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.15)', zIndex: 50,
   },
   tab: {
-    width: 36,
-    height: 36,
-    borderRadius: '50%',
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    fontSize: 16,
-    fontFamily: "'Caveat', cursive",
-    color: '#000',
-    transition: 'all 0.2s',
+    width: 36, height: 36, borderRadius: '50%', border: 'none',
+    background: 'transparent', cursor: 'pointer', fontSize: 16,
+    fontFamily: "'Caveat', cursive", color: '#000', transition: 'all 0.2s',
   },
-  tabActive: {
-    background: '#000',
-    color: '#fff',
-  },
+  tabActive: { background: '#000', color: '#fff' },
   buyLink: {
-    fontSize: 20,
-    fontFamily: "'Caveat', cursive",
-    color: '#3a2e22',
-    textDecoration: 'none',
-    background: 'rgba(245, 230, 200, 0.45)',
-    backdropFilter: 'blur(6px)',
-    border: '1px solid rgba(180,150,100,0.4)',
-    borderRadius: 10,
-    padding: '10px 16px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-    letterSpacing: '0.01em',
-    lineHeight: 1.3,
-    transition: 'all 0.2s',
+    fontSize: 20, fontFamily: "'Caveat', cursive", color: '#3a2e22',
+    textDecoration: 'none', background: 'rgba(245, 230, 200, 0.45)',
+    backdropFilter: 'blur(6px)', border: '1px solid rgba(180,150,100,0.4)',
+    borderRadius: 10, padding: '10px 16px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    letterSpacing: '0.01em', lineHeight: 1.3, transition: 'all 0.2s',
   },
   kbd: {
-    display: 'inline-block',
-    background: 'rgba(90,74,58,0.12)',
-    border: '1px solid rgba(90,74,58,0.3)',
-    borderRadius: 4,
-    padding: '0px 5px',
-    fontSize: 14,
-    fontFamily: 'monospace',
-    lineHeight: '20px',
-    verticalAlign: 'middle',
+    display: 'inline-block', background: 'rgba(90,74,58,0.12)',
+    border: '1px solid rgba(90,74,58,0.3)', borderRadius: 4,
+    padding: '0px 5px', fontSize: 14, fontFamily: 'monospace',
+    lineHeight: '20px', verticalAlign: 'middle',
   },
   instructions: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 2,
-    fontFamily: "'Caveat', cursive",
-    fontSize: 18,
-    color: '#000',
-    opacity: 0.7,
-    pointerEvents: 'none',
-    userSelect: 'none',
+    display: 'flex', flexDirection: 'column', gap: 2,
+    fontFamily: "'Caveat', cursive", fontSize: 18, color: '#000',
+    opacity: 0.7, pointerEvents: 'none', userSelect: 'none',
   },
   langSelect: {
-    fontFamily: "'Caveat', cursive",
-    fontSize: 16,
-    color: '#3a2e22',
-    background: 'rgba(245, 230, 200, 0.45)',
-    backdropFilter: 'blur(6px)',
-    border: '1px solid rgba(180,150,100,0.4)',
-    borderRadius: 10,
-    padding: '6px 18px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-    minWidth: 64,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
+    fontFamily: "'Caveat', cursive", fontSize: 16, color: '#3a2e22',
+    background: 'rgba(245, 230, 200, 0.45)', backdropFilter: 'blur(6px)',
+    border: '1px solid rgba(180,150,100,0.4)', borderRadius: 10,
+    padding: '6px 18px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    minWidth: 64, cursor: 'pointer', transition: 'all 0.2s',
   } as React.CSSProperties,
-  tabEllipsis: {
-    fontSize: 16,
-    color: '#000',
-    lineHeight: '36px',
-    padding: '0 2px',
-    userSelect: 'none',
-  },
+  tabEllipsis: { fontSize: 16, color: '#000', lineHeight: '36px', padding: '0 2px', userSelect: 'none' },
 };
