@@ -178,6 +178,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
   const modalRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
+  const autoFitDone = useRef(false);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dirRef = useRef<1 | -1>(1);
   const accumRef = useRef(0);
@@ -208,6 +209,8 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
   // progressBar(31) + label(38) + letter-content margin-top(60) + stamp(40) = 169px
   const OVERHEAD = 169;
   const handleLineMeasure = useCallback((lineCount: number) => {
+    if (autoFitDone.current) return;
+    autoFitDone.current = true;
     const available = (stackRef.current?.clientHeight ?? window.innerHeight) - OVERHEAD;
     // height ≈ lineCount × 26 × s² (font width and line-height both scale with s)
     const s = Math.sqrt(available / (lineCount * 26));
