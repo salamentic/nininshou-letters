@@ -354,7 +354,12 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
       <div style={styles.footer}>
         <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
         {pages.map((_, i) => (
-          <div key={i} style={{ ...styles.dot, opacity: i === current ? 1 : 0.25 }} />
+          <button
+            key={i}
+            className="btn-nav"
+            style={{ ...styles.pageBtn, ...(i === current ? styles.pageBtnActive : {}) }}
+            onClick={() => { dirRef.current = i >= current ? 1 : -1; playFlipRef.current(); setCurrent(i); }}
+          >{i + 1}</button>
         ))}
         <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(1)} disabled={current === pages.length - 1}>›</button>
       </div>
@@ -385,5 +390,6 @@ const styles: Record<string, React.CSSProperties> = {
 navBtn:      { background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#555', padding: '0 8px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 32, height: 32, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 14, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   fontBtn:     { background: 'none', border: 'none', fontSize: 13, cursor: 'pointer', color: '#888', padding: '0 6px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em' } as React.CSSProperties,
-  dot:         { width: 6, height: 6, borderRadius: '50%', background: '#333', transition: 'opacity 0.2s' },
+  pageBtn:       { width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 14, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },
+  pageBtnActive: { background: '#333', color: '#fff' },
 };
