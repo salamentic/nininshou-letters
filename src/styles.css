@@ -169,7 +169,7 @@ body {
 .btn-close:hover { background: #f0f0f0 !important; border-color: #bbb !important; color: #333 !important; }
 .btn-nav:hover:not(:disabled) { color: #111; background: rgba(0,0,0,0.06); border-radius: 6px; }
 .btn-nav:disabled { opacity: 0.3; cursor: default; }
-.btn-burger:hover { background: rgba(245,230,200,0.98) !important; box-shadow: 0 2px 12px rgba(0,0,0,0.18) !important; }
+.btn-burger:hover { background: rgba(245,230,200,0.98) !important; }
 .btn-menu-item:hover { background: rgba(90,74,58,0.09) !important; }
 .btn-menu-sub:hover { background: rgba(90,74,58,0.06) !important; color: #3a3a3a !important; }
 .btn-tab:hover:not(.btn-tab-active) { background: rgba(0,0,0,0.08) !important; }

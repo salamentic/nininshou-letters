@@ -145,7 +145,6 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 5,
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
     padding: 0,
   },
   bar: {
