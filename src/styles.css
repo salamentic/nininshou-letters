@@ -237,9 +237,8 @@ body {
   margin-right: -122px;
   margin-left: 0;
   font-family: 'Indie Flower', cursive;
-  font-size: calc(11px * var(--lc-scale, 1));
+  font-size: calc(16px * var(--lc-scale, 1));
   color: #5a4a3a;
-  opacity: 0.65;
   line-height: 1.35;
   transform: rotate(1.5deg);
   border-left: 1px solid rgba(90,74,58,0.25);
@@ -253,9 +252,8 @@ body {
   margin-left: -122px;
   margin-right: 0;
   font-family: 'Indie Flower', cursive;
-  font-size: calc(11px * var(--lc-scale, 1));
+  font-size: calc(16px * var(--lc-scale, 1));
   color: #5a4a3a;
-  opacity: 0.65;
   line-height: 1.35;
   transform: rotate(-1.5deg);
   border-right: 1px solid rgba(90,74,58,0.25);
@@ -274,9 +272,8 @@ body {
   flex-direction: column;
   justify-content: center;
   font-family: 'Indie Flower', cursive;
-  font-size: calc(11px * var(--lc-scale, 1));
+  font-size: calc(16px * var(--lc-scale, 1));
   color: #5a4a3a;
-  opacity: 0.65;
   line-height: 1.35;
   transform: rotate(-0.8deg);
   padding-bottom: 6px;
@@ -356,7 +353,6 @@ rough-notation {
 }
 
 .letter-content .note:hover::after {
-  opacity: 1;
 }
 
 .letter-content img {
