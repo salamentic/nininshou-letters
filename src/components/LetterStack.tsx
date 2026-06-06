@@ -1,20 +1,19 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from 'motion/react';
-import { annotate } from 'rough-notation';
+import 'vanilla-rough-notation';
+import { prepare, layout } from '@chenglou/pretext';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import boopSfx from '@/assets/flip.wav';
 import useSound from 'use-sound';
 
-/** Hash a string to a stable integer seed. */
 function hashStr(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
   return Math.abs(h);
 }
 
-/** Deterministic value in [0, 1) from a seed + slot so stamp stays the same on re-open. */
 function seededRand(seed: number, slot: number): number {
   const x = Math.sin(seed * 127.1 + slot * 311.7) * 43758.5453;
   return x - Math.floor(x);
@@ -23,14 +22,11 @@ function seededRand(seed: number, slot: number): number {
 function stampStyles(pageId: string): { wrapper: React.CSSProperties; img: React.CSSProperties } {
   const r = (slot: number) => seededRand(hashStr(pageId), slot);
   const rotation = r(0) * 36 - 18;
-  const offsetX  = Math.round(r(1) * 8 + 4);   // 4 … 12 px from right edge
-  const offsetY  = Math.round(r(2) * 8);        // 0 … 8 px from bottom edge
+  const offsetX  = Math.round(r(1) * 8 + 4);
+  const offsetY  = Math.round(r(2) * 8);
   const opacity  = 0.45 + r(3) * 0.55;
   const scale    = 0.85 + r(4) * 0.30;
   return {
-    // In-flow wrapper replaces letter-page's padding-bottom (40px).
-    // position:relative makes this the containing block for the flower,
-    // so bottom/right are relative to the wrapper, not the viewport.
     wrapper: {
       position: 'relative',
       height: 40,
@@ -59,7 +55,7 @@ interface Props {
   language: string;
 }
 
-function LetterPage({ page, i, current, total, setPageRef, language, fontScale }: {
+function LetterPage({ page, i, current, total, setPageRef, language, fontScale, onLineMeasure }: {
   page: Letter;
   i: number;
   current: number;
@@ -67,6 +63,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   setPageRef: (el: HTMLDivElement | null) => void;
   language: string;
   fontScale: number;
+  onLineMeasure?: (lineCount: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const cacheKey = `${language}/${page.page}`;
@@ -84,16 +81,33 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
       });
   }, [cacheKey]);
 
-  // On initial modal open the page is already at its resting position so
-  // onAnimationComplete never fires — handle that case with a timer instead.
+  useEffect(() => {
+    if (i !== current || !html || !ref.current) return;
+    const containerWidth = ref.current.clientWidth;
+    document.fonts.ready.then(async () => {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      let totalLines = 0;
+      for (const p of div.querySelectorAll<HTMLElement>('p.boy, p.sensei')) {
+        const font = p.classList.contains('sensei') ? '18px "La Belle Aurore"' : '16px Caveat';
+        const text = p.textContent ?? '';
+        if (!text.trim()) continue;
+        const { lineCount } = layout(await prepare(text, font), containerWidth, 26);
+        totalLines += lineCount;
+      }
+      if (totalLines > 0) onLineMeasure?.(totalLines);
+    });
+  }, [html, i, current]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // onAnimationComplete doesn't fire on initial open — draw after first paint instead.
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
     const container = ref.current;
-    const t = setTimeout(() => drawAnnotations(container), 300);
-    return () => clearTimeout(t);
+    const raf = requestAnimationFrame(() => drawAnnotations(container));
+    return () => cancelAnimationFrame(raf);
   }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Redraw annotations when font scale changes — SVG positions are stale after reflow.
+  // SVG annotation positions are stale after font-scale reflow.
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
     const container = ref.current;
@@ -102,19 +116,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   }, [fontScale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function drawAnnotations(container: HTMLElement) {
-    container.querySelectorAll('svg.rough-annotation').forEach(s => s.remove());
-    container.querySelectorAll<HTMLElement>('.rn-circle').forEach(el =>
-      annotate(el, { type: 'circle', color: '#c0392b', padding: 3, iterations: 2, animate: false }).show()
-    );
-    container.querySelectorAll<HTMLElement>('.rn-cross').forEach(el =>
-      annotate(el, { type: 'crossed-off', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
-    );
-    container.querySelectorAll<HTMLElement>('.rn-underline').forEach(el =>
-      annotate(el, { type: 'underline', color: '#2c2416', strokeWidth: 1.5, animate: false }).show()
-    );
-    container.querySelectorAll<HTMLElement>('.rn-underline-red').forEach(el =>
-      annotate(el, { type: 'underline', color: '#c0392b', strokeWidth: 1.5, animate: false }).show()
-    );
+    container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
   }
 
   return (
@@ -172,6 +174,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
   useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dirRef = useRef<1 | -1>(1);
   const accumRef = useRef(0);
@@ -187,6 +190,15 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
     setCurrent(c => dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0));
   }, [pages.length]);
 
+  // progressBar(31) + label(38) + letter-content margin-top(60) + stamp(40) = 169px
+  const OVERHEAD = 169;
+  const handleLineMeasure = useCallback((lineCount: number) => {
+    const available = (stackRef.current?.clientHeight ?? window.innerHeight) - OVERHEAD;
+    // height ≈ lineCount × 26 × s² (font width and line-height both scale with s)
+    const s = Math.sqrt(available / (lineCount * 26));
+    setFontScale(Math.min(1.0, Math.max(0.5, s)));
+  }, []);
+
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
   useEffect(() => { modalRef.current?.focus(); }, []);
 
@@ -200,12 +212,11 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, navigatePage]);
 
-  // Scroll the incoming page to the correct end based on navigation direction
   useEffect(() => {
     const pageEl = pageRefs.current[current];
     if (!pageEl) return;
     pageEl.scrollTop = dirRef.current === 1 ? 0 : pageEl.scrollHeight;
-    // On mobile, default to showing main text (left margin scrollable to the left)
+    // Mobile: start scrolled right so main text is visible; left margin is off-screen.
     pageEl.scrollLeft = window.matchMedia('(max-width: 640px)').matches ? 110 : 0;
   }, [current]);
 
@@ -215,7 +226,6 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
     const onWheel = (e: WheelEvent) => {
       if (!modalRef.current?.contains(e.target as Node)) return;
 
-      // If a scrollable child has room, let it scroll
       let node = e.target as HTMLElement | null;
       let childCanScroll = false;
       while (node && node !== el) {
@@ -244,7 +254,6 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
       e.preventDefault();
 
-      // Drain accumulator if scroll has been idle for 200ms
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => { accumRef.current = 0; }, 200);
 
@@ -312,7 +321,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
         </div>
       </div>
 
-      <div style={styles.stack}>
+      <div ref={stackRef} style={styles.stack}>
         {pages.map((page, i) => (
           <LetterPage
             key={page.page}
@@ -323,6 +332,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
             setPageRef={el => { pageRefs.current[i] = el; }}
             language={language}
             fontScale={fontScale}
+            onLineMeasure={handleLineMeasure}
           />
         ))}
       </div>

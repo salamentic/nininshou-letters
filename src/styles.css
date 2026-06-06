@@ -307,14 +307,9 @@ body {
   text-decoration: underline;
 }
 
-/* rough notation hand-drawn effects — use in letter html:
-   rn-circle → red circle around word
-   rn-cross → crossed out with an X
-   rn-underline → rough underline */
-.letter-content .rn-circle,
-.letter-content .rn-cross,
-.letter-content .rn-underline,
-.letter-content .rn-underline-red {
+/* vanilla-rough-notation web component — use in letter HTML:
+   <rough-notation type="circle|crossed-off|underline" color="…" strokeWidth="…" animation="false" showOnLoad> */
+rough-notation {
   display: inline;
 }
 
