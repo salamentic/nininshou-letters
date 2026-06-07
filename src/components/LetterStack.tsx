@@ -2,7 +2,6 @@ import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from 'motion/react';
 import 'vanilla-rough-notation';
-import { prepare, layout } from '@chenglou/pretext';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import { getCookie, setCookie } from '@/lib/cookies';
@@ -47,8 +46,6 @@ function stampStyles(pageId: string): { wrapper: React.CSSProperties; img: React
   };
 }
 
-const htmlCache = new Map<string, string>();
-
 interface Props {
   onClose: () => void;
   number: number;
@@ -56,7 +53,7 @@ interface Props {
   language: string;
 }
 
-function LetterPage({ page, i, current, total, setPageRef, language, fontScale, onLineMeasure }: {
+function LetterPage({ page, i, current, total, setPageRef, language, fontScale }: {
   page: Letter;
   i: number;
   current: number;
@@ -64,44 +61,16 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
   setPageRef: (el: HTMLDivElement | null) => void;
   language: string;
   fontScale: number;
-  onFlip?: () => void;
-  onLineMeasure?: (lineCount: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const cacheKey = `${language}/${page.paired_with || page.page}`;
-  const [html, setHtml] = useState<string | null>(htmlCache.get(cacheKey) ?? null);
+  const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    if (Math.abs(i - current) > 1) return;
-    if (html) return;
-    if (htmlCache.has(cacheKey)) { setHtml(htmlCache.get(cacheKey)!); return; }
     fetch(`/letters/${language}/${page.paired_with || page.page}.html`)
       .then(r => r.ok ? r.text() : Promise.reject())
-      .then(text => { htmlCache.set(cacheKey, text); setHtml(text); })
-      .catch(() => {
-        const fallback = `<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`;
-        htmlCache.set(cacheKey, fallback);
-        setHtml(fallback);
-      });
-  }, [cacheKey, i, current]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (i !== current || !html || !ref.current) return;
-    const containerWidth = ref.current.clientWidth;
-    document.fonts.ready.then(async () => {
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      const paragraphs = [...div.querySelectorAll<HTMLElement>('p.boy, p.sensei')];
-      const counts = await Promise.all(paragraphs.map(async p => {
-        const font = p.classList.contains('sensei') ? '18px "La Belle Aurore"' : '16px Caveat';
-        const text = p.textContent ?? '';
-        if (!text.trim()) return 0;
-        return layout(await prepare(text, font), containerWidth, 26).lineCount;
-      }));
-      const totalLines = counts.reduce((a, b) => a + b, 0);
-      if (totalLines > 0) onLineMeasure?.(totalLines);
-    });
-  }, [html, i, current]); // eslint-disable-line react-hooks/exhaustive-deps
+      .then(setHtml)
+      .catch(() => setHtml(''));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // onAnimationComplete doesn't fire on initial open — draw after first paint instead.
   useEffect(() => {
@@ -144,14 +113,14 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale, 
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
       <p style={{ ...styles.label, fontSize: 16 * fontScale }}>{page.paired_with || page.page}</p>
-      <div
-        className={`letter-content ${page.pagetype}`}
-        style={{
-          '--lc-scale': fontScale,
-          flexGrow: 1,
-        } as React.CSSProperties}
-        dangerouslySetInnerHTML={{ __html: html ?? '' }}
-      />
+      {html === null
+        ? <div style={styles.loading}><img src="/flower.png" alt="" style={styles.loadingIcon} /></div>
+        : <div
+            className={`letter-content ${page.pagetype}`}
+            style={{ '--lc-scale': fontScale, flexGrow: 1 } as React.CSSProperties}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+      }
       {(() => { const s = stampStyles(page.page); return <div className="stamp-wrapper" style={s.wrapper}><img src="/flower.png" alt="" style={s.img} /></div>; })()}
     </motion.div>
   );
@@ -180,7 +149,6 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
   const modalRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
-  const autoFitDone = useRef(false);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dirRef = useRef<1 | -1>(1);
   const accumRef = useRef(0);
@@ -210,14 +178,12 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
   // progressBar(31) + label(38) + letter-content margin-top(60) + stamp(40) = 169px
   const OVERHEAD = 169;
-  const handleLineMeasure = useCallback((lineCount: number) => {
-    if (autoFitDone.current) return;
-    autoFitDone.current = true;
+  // On first open (no saved preference), fit the page to a consistent target line count.
+  useEffect(() => {
+    if (getCookie('fontScale')) return;
     const available = (stackRef.current?.clientHeight ?? window.innerHeight) - OVERHEAD;
-    // height ≈ lineCount × 26 × s² (font width and line-height both scale with s)
-    const s = Math.sqrt(available / (lineCount * 26));
-    setFontScale(Math.min(1.0, Math.max(0.5, s)));
-  }, []);
+    setFontScale(Math.min(1.5, Math.max(0.5, available / (20 * 26))));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
   useEffect(() => { modalRef.current?.focus(); }, []);
@@ -348,10 +314,8 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
             current={current}
             total={pages.length}
             setPageRef={el => { pageRefs.current[i] = el; }}
-            onFlip={playFlip}
             language={language}
             fontScale={fontScale}
-            onLineMeasure={handleLineMeasure}
           />
         ))}
       </div>
@@ -397,4 +361,6 @@ navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointe
   fontBtn:     { background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', color: '#888', padding: '0 8px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em' } as React.CSSProperties,
   pageBtn:       { width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },
   pageBtnActive: { background: '#333', color: '#fff' },
+  loading:       { flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  loadingIcon:   { width: 72, height: 72, opacity: 0.35, animation: 'pulse 1.4s ease-in-out infinite' },
 };

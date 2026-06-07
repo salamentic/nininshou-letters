@@ -3,6 +3,8 @@
     padding: 0; box-sizing: border-box;
 }
 
+@keyframes pulse { 0%, 100% { opacity: 0.2; transform: scale(0.9); } 50% { opacity: 0.5; transform: scale(1.1); } }
+
 html, body {
     overflow: hidden;
 }

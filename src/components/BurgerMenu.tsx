@@ -1,4 +1,4 @@
-import { memo, useState, useMemo } from 'react';
+import { memo, useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages } from '@/lib/parseLetters';
 
@@ -35,6 +35,13 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
     onPageSelect({ envelopeIndex, pageIndex });
     setOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
