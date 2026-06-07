@@ -5,6 +5,14 @@
 
 @keyframes pulse { 0%, 100% { opacity: 0.2; transform: scale(0.9); } 50% { opacity: 0.5; transform: scale(1.1); } }
 
+:root {
+  --toastify-color-dark: #2c2416;
+  --toastify-text-color-dark: #f5e6c8;
+  --toastify-font-family: 'Caveat', cursive;
+  --toastify-toast-min-height: 48px;
+  --toastify-toast-bd-radius: 10px;
+}
+
 html, body {
     overflow: hidden;
 }

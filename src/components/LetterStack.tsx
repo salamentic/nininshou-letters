@@ -51,6 +51,7 @@ interface Props {
   number: number;
   initialPage?: number;
   language: string;
+  unlocked?: boolean;
 }
 
 function LetterPage({ page, i, current, total, setPageRef, language, fontScale }: {
@@ -112,7 +113,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
         animate={{ scaleX: (current + 1) / total }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
       />
-      <p style={{ ...styles.label, fontSize: 16 * fontScale }}>{page.paired_with || page.page}</p>
+      <p style={{ ...styles.label, fontSize: 22 * fontScale }}>{page.paired_with || page.page}</p>
       {html === null
         ? <div style={styles.loading}><img src="/flower.png" alt="" style={styles.loadingIcon} /></div>
         : <div
@@ -121,7 +122,17 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
             dangerouslySetInnerHTML={{ __html: html }}
           />
       }
-      {(() => { const s = stampStyles(page.page); return <div className="stamp-wrapper" style={s.wrapper}><img src="/flower.png" alt="" style={s.img} /></div>; })()}
+      {(() => {
+        const s = stampStyles(page.page);
+        return (
+          <div className="stamp-wrapper" style={s.wrapper}>
+            <img src="/flower.png" alt="" style={s.img} />
+            {page.circle && (
+              <img src="/circle_mark.svg" alt="" style={{ ...s.img, right: (s.img.right as number) + 34, bottom: (s.img.bottom as number) + 2 }} />
+            )}
+          </div>
+        );
+      })()}
     </motion.div>
   );
 }
@@ -138,8 +149,8 @@ function pageAnimate(i: number, current: number) {
   };
 }
 
-export default function LetterStack({ onClose, number, initialPage = 0, language }: Props) {
-  const pages = useMemo(() => getEnvelopePages(number), [number]);
+export default function LetterStack({ onClose, number, initialPage = 0, language, unlocked }: Props) {
+  const pages = useMemo(() => getEnvelopePages(number, unlocked), [number, unlocked]);
   const [current, setCurrent] = useState(initialPage);
   const [fontScale, setFontScale] = useState(() => parseFloat(getCookie('fontScale') ?? '') || 1.0);
   useEffect(() => { setCookie('fontScale', String(fontScale)); }, [fontScale]);
@@ -356,7 +367,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressBar: { position: 'sticky', top: 0, height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
   label:       { color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive" },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
-navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '0 12px', lineHeight: 1 } as React.CSSProperties,
+navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '16px 24px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 38, height: 38, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 16, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   fontBtn:     { background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', color: '#888', padding: '0 8px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em' } as React.CSSProperties,
   pageBtn:       { width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },

@@ -13,6 +13,8 @@ import LetterStack from './components/LetterStack';
 import spotifyData from './assets/spotify_embeds.json';
 import { getCookie, setCookie } from './lib/cookies';
 import CreditsModal from './components/CreditsModal';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ENVELOPE_COUNT = 32;
 const BG_IMAGES = new Set([0, 1, 2, 3, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 31]);
@@ -43,6 +45,15 @@ function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
+  const [env29Unlocked, setEnv29Unlocked] = useState(() => localStorage.getItem('env29Unlocked') === '1');
+
+  useEffect(() => {
+    if (letterNumber === 29 && !env29Unlocked) {
+      setEnv29Unlocked(true);
+      localStorage.setItem('env29Unlocked', '1');
+      toast("Sensei's letters have been added to their original envelopes");
+    }
+  }, [letterNumber, env29Unlocked]);
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
   useSound(flipSound, { volume: 0.05 });
   const playEnvelopeSoundRef = useRef(playEnvelopeSound);
@@ -190,6 +201,8 @@ function AppContent() {
         {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
       </AnimatePresence>
 
+      <ToastContainer position="bottom-center" autoClose={4000} theme="dark" />
+
       <nav style={styles.tabs}>
         {currentEnvelope > 1 && (
           <button style={{ ...styles.tabEllipsis, background: 'none', border: 'none', cursor: 'pointer' }} className="btn-ellipsis" onClick={() => setMenuOpen(true)}>…</button>
@@ -249,6 +262,7 @@ function AppContent() {
             onClose={closeLetter}
             initialPage={initialPage}
             language={language}
+            unlocked={env29Unlocked}
           />
         )}
       </AnimatePresence>
