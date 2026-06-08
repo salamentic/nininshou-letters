@@ -189,6 +189,8 @@ body {
 /* ── Letter page content ── */
 .letter-content {
   line-height: calc(26px * var(--lc-scale, 1));
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   position: relative;
   /* Consistent header zone above every page — large enough to host a
      .margin-note-top annotation.  margin-top (not padding-top) keeps the
