@@ -230,7 +230,10 @@ body {
   white-space: pre-line;
 }
 
-.letter-content p.boy {
+.letter-content p.boy,
+.letter-content .margin-note,
+.letter-content .margin-note-left,
+.letter-content .margin-note-top {
   font-family: 'Caveat', cursive;
   font-size: calc(16px * var(--lc-scale, 1));
   color: #5a4a3a;
@@ -249,9 +252,6 @@ body {
   width: 90px;
   margin-right: -122px;
   margin-left: 0;
-  font-family: 'Caveat', cursive;
-  font-size: calc(16px * var(--lc-scale, 1));
-  color: #5a4a3a;
   line-height: 1.35;
   transform: rotate(1.5deg);
 }
@@ -262,9 +262,6 @@ body {
   width: 90px;
   margin-left: -122px;
   margin-right: 0;
-  font-family: 'Caveat', cursive;
-  font-size: calc(16px * var(--lc-scale, 1));
-  color: #5a4a3a;
   line-height: 1.35;
   transform: rotate(-1.5deg);
   text-align: right;
@@ -283,9 +280,6 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  font-family: 'Caveat', cursive;
-  font-size: calc(16px * var(--lc-scale, 1));
-  color: #5a4a3a;
   line-height: 1.35;
   transform: rotate(-0.8deg);
   padding-bottom: 6px;
