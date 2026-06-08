@@ -143,10 +143,12 @@ function pageAnimate(i: number, current: number) {
   };
 }
 
+const snapScale = (s: number) => Math.round(s * 26) / 26;
+
 export default function LetterStack({ onClose, number, initialPage = 0, language, unlocked }: Props) {
   const pages = useMemo(() => getEnvelopePages(number, unlocked), [number, unlocked]);
   const [current, setCurrent] = useState(initialPage);
-  const [fontScale, setFontScale] = useState(() => parseFloat(getCookie('fontScale') ?? '') || 1.0);
+  const [fontScale, setFontScale] = useState(() => snapScale(parseFloat(getCookie('fontScale') ?? '') || 1.0));
   useEffect(() => { setCookie('fontScale', String(fontScale)); }, [fontScale]);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
   const playFlipRef = useRef(playFlip);
@@ -187,7 +189,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
   useEffect(() => {
     if (getCookie('fontScale')) return;
     const available = (stackRef.current?.clientHeight ?? window.innerHeight) - OVERHEAD;
-    setFontScale(Math.min(1.5, Math.max(0.5, available / (20 * 26))));
+    setFontScale(snapScale(Math.min(1.5, Math.max(0.5, available / (20 * 26)))));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setCurrent(initialPage); }, [initialPage]);
@@ -291,13 +293,13 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
         <span>Envelope {number}{envelopeDate ? `, ${envelopeDate}` : ''}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button
-            onClick={() => setFontScale(s => Math.max(0.75, +(s - 0.125).toFixed(3)))}
+            onClick={() => setFontScale(s => snapScale(Math.max(0.5, s - 0.125)))}
             style={styles.fontBtn}
             className="btn-nav"
-            disabled={fontScale <= 0.75}
+            disabled={fontScale <= snapScale(0.5)}
           >A−</button>
           <button
-            onClick={() => setFontScale(s => Math.min(1.5, +(s + 0.125).toFixed(3)))}
+            onClick={() => setFontScale(s => snapScale(Math.min(1.5, s + 0.125)))}
             style={styles.fontBtn}
             className="btn-nav"
             disabled={fontScale >= 1.5}
