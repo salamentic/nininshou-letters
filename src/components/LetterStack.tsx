@@ -67,7 +67,8 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/letters/${language}/${page.paired_with || page.page}.html`)
+    const bust = import.meta.env.DEV ? `?t=${Date.now()}` : '';
+    fetch(`/letters/${language}/${page.paired_with || page.page}.html${bust}`)
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(setHtml)
       .catch(() => setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`));
@@ -97,7 +98,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
         if (i === current && ref.current && html) drawAnnotations(ref.current);
       }}
       className="letter-page"
-      style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}) }}
+      style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}), ...(page.pagetype === 'flyer' ? { background: '#c9c3bb', justifyContent: 'center' } : {}) }}
     >
       <motion.div
         className="letter-progress-bar"
@@ -114,7 +115,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
               style={{ '--lc-scale': fontScale, flexGrow: 1 } as React.CSSProperties}
               dangerouslySetInnerHTML={{ __html: html }}
             />
-            {(() => {
+            {page.pagetype !== 'flyer' && (() => {
               const s = stampStyles(page.page);
               return (
                 <div className="stamp-wrapper" style={s.wrapper}>
@@ -329,11 +330,11 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
 
       <div style={styles.footer}>
         <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(-1)} disabled={current === 0}>‹</button>
-        {pages.map((_, i) => (
+        {pages.map((page, i) => (
           <button
             key={i}
             className="btn-nav"
-            style={{ ...styles.pageBtn, ...(i === current ? styles.pageBtnActive : {}) }}
+            style={{ ...styles.pageBtn, ...(i === current ? styles.pageBtnActive : {}), ...(page.hidden ? styles.pageBtnUnlocked : {}) }}
             onClick={() => { dirRef.current = i >= current ? 1 : -1; playFlipRef.current(); setCurrent(i); }}
           >{i + 1}</button>
         ))}
@@ -366,8 +367,9 @@ const styles: Record<string, React.CSSProperties> = {
 navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '16px 24px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 38, height: 38, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 16, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   fontBtn:     { background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', color: '#888', padding: '0 8px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em' } as React.CSSProperties,
-  pageBtn:       { width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },
-  pageBtnActive: { background: '#333', color: '#fff' },
+  pageBtn:         { width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },
+  pageBtnActive:   { background: '#333', color: '#fff' },
+  pageBtnUnlocked: { outline: '1.5px solid #c0392b', outlineOffset: '2px' },
   loading:       { flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   loadingIcon:   { width: 72, height: 72, opacity: 0.35, animation: 'pulse 1.4s ease-in-out infinite' },
 };

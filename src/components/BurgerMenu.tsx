@@ -110,6 +110,7 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
                               onClick={() => handlePageClick(i, j)}
                             >
                               {page.page}
+                              {page.hidden && <span style={styles.unlockedDot} />}
                             </button>
                           ))}
                         </motion.div>
@@ -220,6 +221,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'Caveat', cursive",
     color: '#666',
     width: '100%',
-    display: 'block',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  unlockedDot: {
+    display: 'inline-block',
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    border: '1.5px solid #c0392b',
+    flexShrink: 0,
   },
 };

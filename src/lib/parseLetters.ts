@@ -9,7 +9,7 @@ export interface Letter {
   page:          string;
   date:          string | null;
   author:        'boy' | 'sensei' | 'mixed';
-  pagetype:      'lined' | 'manuscript';
+  pagetype:      'lined' | 'manuscript' | 'flyer';
   circle?:      boolean;
   hidden?:      boolean;
   paired_with?: string;
