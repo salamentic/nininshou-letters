@@ -341,31 +341,6 @@ rough-notation {
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: help;
-  position: relative;
-}
-
-.letter-content .note::after {
-  content: attr(data-note);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  background: #2c2416;
-  color: #f5e6c8;
-  font-family: 'Caveat', cursive;
-  font-size: calc(11px * var(--lc-scale, 1));
-  line-height: 1.4;
-  white-space: normal;
-  width: 25vw;
-  padding: 6px 10px;
-  border-radius: 4px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 200;
-}
-
-.letter-content .note:hover::after {
-  opacity: 1;
 }
 
 .letter-content img {

@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from 'motion/react';
+import { Tooltip } from 'react-tooltip';
+import { motion } from 'motion/react';
 import 'vanilla-rough-notation';
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
@@ -67,7 +68,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    const bust = import.meta.env.DEV ? `?t=${Date.now()}` : '';
+    const bust = (import.meta as any).env?.DEV ? `?t=${Date.now()}` : '';
     fetch(`/letters/${language}/${page.paired_with || page.page}.html${bust}`)
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(setHtml)
@@ -115,6 +116,12 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
               style={{ '--lc-scale': fontScale, flexGrow: 1 } as React.CSSProperties}
               dangerouslySetInnerHTML={{ __html: html }}
             />
+            <Tooltip
+              anchorSelect=".letter-content .note"
+              render={({ activeAnchor }) => activeAnchor?.getAttribute('data-note')}
+              place="top-start"
+              style={{ width: '25vw', fontFamily: "'Caveat', cursive", fontSize: 13 * fontScale, lineHeight: 1.4, zIndex: 9999, background: '#2c2416', color: '#f5e6c8', borderRadius: 4, padding: '6px 10px' }}
+            />
             {page.pagetype !== 'flyer' && (() => {
               const s = stampStyles(page.page);
               return (
@@ -148,7 +155,11 @@ const snapScale = (s: number) => Math.round(s * 26) / 26;
 
 export default function LetterStack({ onClose, number, initialPage = 0, language, unlocked }: Props) {
   const pages = useMemo(() => getEnvelopePages(number, unlocked), [number, unlocked]);
-  const [current, setCurrent] = useState(initialPage);
+  const [current, setCurrent] = useState(() => {
+    if (initialPage > 0) return initialPage;
+    return parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0;
+  });
+  useEffect(() => { setCookie(`lastPage_${number}`, String(current)); }, [number, current]);
   const [fontScale, setFontScale] = useState(() => snapScale(parseFloat(getCookie('fontScale') ?? '') || 1.0));
   useEffect(() => { setCookie('fontScale', String(fontScale)); }, [fontScale]);
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
@@ -193,7 +204,10 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
     setFontScale(snapScale(Math.min(1.5, Math.max(0.5, available / (20 * 26)))));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { setCurrent(initialPage); }, [initialPage]);
+  useEffect(() => {
+    const saved = parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0;
+    setCurrent(initialPage > 0 ? initialPage : saved);
+  }, [number, initialPage]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { modalRef.current?.focus(); }, []);
 
   useEffect(() => {
