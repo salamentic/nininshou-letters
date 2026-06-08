@@ -45,23 +45,23 @@ function AppContent() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
-  const [env29Unlocked, setEnv29Unlocked] = useState(() => localStorage.getItem('env29Unlocked') === '1');
+  const [env29Unlocked, setEnv29Unlocked] = useState(() => getCookie('env29Unlocked') === '1');
 
   useEffect(() => {
     if (letterNumber === 29 && !env29Unlocked) {
       setEnv29Unlocked(true);
-      localStorage.setItem('env29Unlocked', '1');
+      setCookie('env29Unlocked', '1');
       toast("Sensei's letters have been added to their original envelopes");
     }
-  }, [letterNumber, env29Unlocked]);
+  }, [letterNumber]); // eslint-disable-line react-hooks/exhaustive-deps
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
   useSound(flipSound, { volume: 0.05 });
   const playEnvelopeSoundRef = useRef(playEnvelopeSound);
   useEffect(() => { playEnvelopeSoundRef.current = playEnvelopeSound; }, [playEnvelopeSound]);
   const [ready, setReady] = useState(false);
 
-  const stateRef = useRef({ currentEnvelope, isLetterOpen, menuOpen });
-  useEffect(() => { stateRef.current = { currentEnvelope, isLetterOpen, menuOpen }; }, [currentEnvelope, isLetterOpen, menuOpen]);
+  const stateRef = useRef({ currentEnvelope, isLetterOpen, menuOpen, creditsOpen });
+  useEffect(() => { stateRef.current = { currentEnvelope, isLetterOpen, menuOpen, creditsOpen }; }, [currentEnvelope, isLetterOpen, menuOpen, creditsOpen]);
 
   useEffect(() => { setCookie('lastEnvelope', String(currentEnvelope)); }, [currentEnvelope]);
 
@@ -89,7 +89,13 @@ function AppContent() {
   // Tab + Space only (EnvelopeStackScrollable owns arrow keys + scroll)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const { currentEnvelope: ce, isLetterOpen: ilo, menuOpen: mo } = stateRef.current;
+      const { currentEnvelope: ce, isLetterOpen: ilo, menuOpen: mo, creditsOpen: co } = stateRef.current;
+      if (e.key === 'Escape') {
+        if (co) { setCreditsOpen(false); return; }
+        if (ilo) { closeLetter(); return; }
+        if (mo) { setMenuOpen(false); return; }
+        return;
+      }
       if (e.key === 'Tab') {
         e.preventDefault();
         setMenuOpen(m => !m);
@@ -148,6 +154,7 @@ function AppContent() {
         envelopeCount={ENVELOPE_COUNT}
         open={menuOpen}
         onOpenChange={setMenuOpen}
+        unlocked={env29Unlocked}
       />
 
       <EnvelopeStackScrollable

@@ -234,7 +234,8 @@ body {
   color: #5a4a3a;
 }
 
-.letter-content p.sensei {
+.letter-content p.sensei,
+.letter-content span.sensei {
   font-family: 'La Belle Aurore', cursive;
   font-size: calc(18px * var(--lc-scale, 1));
   color: #c0392b;

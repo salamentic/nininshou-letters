@@ -1,5 +1,4 @@
 import { createPortal } from 'react-dom';
-import { useEffect } from 'react';
 import { motion } from 'motion/react';
 
 interface Props {
@@ -7,12 +6,6 @@ interface Props {
 }
 
 export default function CreditsModal({ onClose }: Props) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   return createPortal(
     <motion.div
       style={styles.overlay}

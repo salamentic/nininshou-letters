@@ -70,24 +70,16 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
     fetch(`/letters/${language}/${page.paired_with || page.page}.html`)
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(setHtml)
-      .catch(() => setHtml(''));
+      .catch(() => setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // onAnimationComplete doesn't fire on initial open — draw after first paint instead.
+  // Redraw annotations after first paint and after font-scale reflow.
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
     const container = ref.current;
     const raf = requestAnimationFrame(() => drawAnnotations(container));
     return () => cancelAnimationFrame(raf);
-  }, [html]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // SVG annotation positions are stale after font-scale reflow.
-  useEffect(() => {
-    if (i !== current || !ref.current || !html) return;
-    const container = ref.current;
-    const raf = requestAnimationFrame(() => drawAnnotations(container));
-    return () => cancelAnimationFrame(raf);
-  }, [fontScale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [html, fontScale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function drawAnnotations(container: HTMLElement) {
     container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
@@ -116,23 +108,25 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
       <p style={{ ...styles.label, fontSize: 22 * fontScale }}>{page.paired_with || page.page}</p>
       {html === null
         ? <div style={styles.loading}><img src="/flower.png" alt="" style={styles.loadingIcon} /></div>
-        : <div
-            className={`letter-content ${page.pagetype}`}
-            style={{ '--lc-scale': fontScale, flexGrow: 1 } as React.CSSProperties}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+        : <>
+            <div
+              className={`letter-content ${page.pagetype}`}
+              style={{ '--lc-scale': fontScale, flexGrow: 1 } as React.CSSProperties}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+            {(() => {
+              const s = stampStyles(page.page);
+              return (
+                <div className="stamp-wrapper" style={s.wrapper}>
+                  <img src="/flower.png" alt="" style={s.img} />
+                  {page.circle && (
+                    <img src="/circle_mark.svg" alt="" style={{ ...s.img, right: (s.img.right as number) + 34, bottom: (s.img.bottom as number) + 2 }} />
+                  )}
+                </div>
+              );
+            })()}
+          </>
       }
-      {(() => {
-        const s = stampStyles(page.page);
-        return (
-          <div className="stamp-wrapper" style={s.wrapper}>
-            <img src="/flower.png" alt="" style={s.img} />
-            {page.circle && (
-              <img src="/circle_mark.svg" alt="" style={{ ...s.img, right: (s.img.right as number) + 34, bottom: (s.img.bottom as number) + 2 }} />
-            )}
-          </div>
-        );
-      })()}
     </motion.div>
   );
 }
@@ -299,13 +293,13 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
           <button
             onClick={() => setFontScale(s => Math.max(0.75, +(s - 0.125).toFixed(3)))}
             style={styles.fontBtn}
-            className="btn-nav desktop-only"
+            className="btn-nav"
             disabled={fontScale <= 0.75}
           >A−</button>
           <button
             onClick={() => setFontScale(s => Math.min(1.5, +(s + 0.125).toFixed(3)))}
             style={styles.fontBtn}
-            className="btn-nav desktop-only"
+            className="btn-nav"
             disabled={fontScale >= 1.5}
           >A+</button>
           <button
@@ -319,7 +313,7 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
       <div ref={stackRef} style={styles.stack}>
         {pages.map((page, i) => (
           <LetterPage
-            key={page.paired_with || page.page}
+            key={`${language}/${page.paired_with || page.page}`}
             page={page}
             i={i}
             current={current}

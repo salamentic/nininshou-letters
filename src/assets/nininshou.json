@@ -57,6 +57,13 @@
         "date": "3/10",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "1-9",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -333,6 +340,13 @@
         "date": "5/19",
         "author": "boy",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "8-3",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -483,6 +497,13 @@
         "date": "6/30",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "13-8(2)",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -519,6 +540,20 @@
         "date": "7/14",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "14-6",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
+      },
+      {
+        "page": "14-7",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -657,6 +692,20 @@
         "date": "9/1",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "18-6",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
+      },
+      {
+        "page": "18-7",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -849,6 +898,13 @@
         "date": "10/7",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "23-5",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -867,6 +923,13 @@
         "date": "10/13",
         "author": "boy",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "24-3",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -897,6 +960,13 @@
         "date": "10/20",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "25-5",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -933,6 +1003,13 @@
         "date": "10/27",
         "author": "sensei",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "26-6",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -957,6 +1034,13 @@
         "date": "11/3",
         "author": "boy",
         "pagetype": "manuscript"
+      },
+      {
+        "page": "27-4",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },
@@ -988,6 +1072,13 @@
         "author": "boy",
         "pagetype": "manuscript",
         "circle": true
+      },
+      {
+        "page": "28-5",
+        "date": "",
+        "author": "sensei",
+        "pagetype": "lined",
+        "hidden": true
       }
     ]
   },

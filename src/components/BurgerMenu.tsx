@@ -1,4 +1,4 @@
-import { memo, useState, useMemo, useEffect } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getEnvelopePages } from '@/lib/parseLetters';
 
@@ -10,9 +10,10 @@ interface Props {
   envelopeCount: number;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  unlocked?: boolean;
 }
 
-function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount, open: controlledOpen, onOpenChange }: Props) {
+function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeCount, open: controlledOpen, onOpenChange, unlocked }: Props) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = (val: boolean | ((prev: boolean) => boolean)) => {
@@ -22,8 +23,8 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
   };
   const [expandedEnvelope, setExpandedEnvelope] = useState<number | null>(null);
   const allPages = useMemo(
-    () => Array.from({ length: envelopeCount }, (_, i) => getEnvelopePages(i + 1)),
-    [envelopeCount]
+    () => Array.from({ length: envelopeCount }, (_, i) => getEnvelopePages(i + 1, unlocked)),
+    [envelopeCount, unlocked]
   );
 
   const handleEnvelopeClick = (i: number) => {
@@ -35,13 +36,6 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
     onPageSelect({ envelopeIndex, pageIndex });
     setOpen(false);
   };
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
