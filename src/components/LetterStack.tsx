@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback, useImperativeHandle, forwardRef } from "react";
 import { Tooltip } from 'react-tooltip';
 import { motion } from 'motion/react';
 import 'vanilla-rough-notation';
@@ -47,10 +47,15 @@ function stampStyles(pageId: string): { wrapper: React.CSSProperties; img: React
   };
 }
 
+export interface LetterStackHandle {
+  goToPage: (index: number) => void;
+}
+
 interface Props {
   onClose: () => void;
   number: number;
   initialPage?: number | null;
+  onPageConsumed?: () => void;
   language: string;
   unlocked?: boolean;
 }
@@ -79,15 +84,31 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
     const container = ref.current;
-    const raf = requestAnimationFrame(() => drawAnnotations(container));
+    const raf = requestAnimationFrame(() => {
+      drawAnnotations(container);
+      alignImageLines(container, fontScale);
+    });
     return () => cancelAnimationFrame(raf);
   }, [html, fontScale, current]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function alignImageLines(container: HTMLElement, scale: number) {
+    const lineH = Math.round(26 * scale);
+    const content = container.querySelector('.letter-content') as HTMLElement | null;
+    if (!content) return;
+    const contentTop = content.getBoundingClientRect().top;
+    content.querySelectorAll<HTMLElement>('a:has(img)').forEach(a => {
+      const imgTop = a.getBoundingClientRect().top - contentTop;
+      const offset = ((0.78 * lineH - imgTop % lineH) % lineH + lineH) % lineH;
+      a.style.setProperty('--img-line-offset', `${offset}px`);
+    });
+  }
 
   function drawAnnotations(container: HTMLElement) {
     setTimeout(() => {
       container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
     }, 100);
   }
+
 
   return (
     <motion.div
@@ -155,12 +176,13 @@ function pageAnimate(i: number, current: number) {
 
 const snapScale = (s: number) => Math.round(s * 26) / 26;
 
-export default function LetterStack({ onClose, number, initialPage = null, language, unlocked }: Props) {
+const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ onClose, number, initialPage = null, onPageConsumed, language, unlocked }, handle) {
   const pages = useMemo(() => getEnvelopePages(number, unlocked), [number, unlocked]);
   const [current, setCurrent] = useState(() => {
     if (initialPage !== null) return initialPage;
     return parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0;
   });
+  useImperativeHandle(handle, () => ({ goToPage: (i) => setCurrent(i) }));
   useEffect(() => { setCookie(`lastPage_${number}`, String(current)); }, [number, current]);
   const [fontScale, setFontScale] = useState(() => snapScale(parseFloat(getCookie('fontScale') ?? '') || 1.0));
   useEffect(() => { setCookie('fontScale', String(fontScale)); }, [fontScale]);
@@ -207,7 +229,11 @@ export default function LetterStack({ onClose, number, initialPage = null, langu
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (initialPage !== null) { setCurrent(initialPage); return; }
+    if (initialPage !== null) {
+      setCurrent(initialPage);
+      onPageConsumed?.();
+      return;
+    }
     setCurrent(parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0);
   }, [number, initialPage]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { modalRef.current?.focus(); }, []);
@@ -359,7 +385,9 @@ export default function LetterStack({ onClose, number, initialPage = null, langu
     </motion.div>,
     document.body
   );
-}
+});
+
+export default LetterStack;
 
 const styles: Record<string, React.CSSProperties> = {
   fullPage:    { position: 'fixed', inset: 0, background: '#f5e6c8', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 100 },

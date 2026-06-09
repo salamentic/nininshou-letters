@@ -9,7 +9,7 @@ import Envelope, { type EnvelopeHandle } from './components/Envelope';
 import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
 import BurgerMenu from './components/BurgerMenu';
 import SpotifyPlayer from './components/SpotifyPlayer';
-import LetterStack from './components/LetterStack';
+import LetterStack, { type LetterStackHandle } from './components/LetterStack';
 import spotifyData from './assets/spotify_embeds.json';
 import { getCookie, setCookie } from './lib/cookies';
 import CreditsModal from './components/CreditsModal';
@@ -28,7 +28,7 @@ function AppContent() {
   const letterNumber = num ? (parseInt(num) || null) : null;
   const isLetterOpen = letterNumber !== null && letterNumber >= 1 && letterNumber <= ENVELOPE_COUNT;
   const pageParam = new URLSearchParams(location.search).get('page');
-  const initialPage = pageParam !== null ? (parseInt(pageParam) || 0) : null;
+  const deepLinkPage = pageParam !== null ? (parseInt(pageParam) || 0) : null;
 
   // Current envelope in the stack — local state, URL plays no role here
   const [currentEnvelope, setCurrentEnvelope] = useState(() => {
@@ -43,6 +43,8 @@ function AppContent() {
   );
 
   const envelopeRefs = useRef<(EnvelopeHandle | null)[]>([]);
+  const letterStackRef = useRef<LetterStackHandle>(null);
+  const [requestedPage, setRequestedPage] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
@@ -72,9 +74,10 @@ function AppContent() {
     Promise.all([document.fonts.ready, img.decode()]).then(() => setReady(true));
   }, []);
 
-  const openLetter = useCallback((envelopeNumber: number, page = 0) => {
+  const openLetter = useCallback((envelopeNumber: number, page: number | null = null) => {
     playEnvelopeSoundRef.current();
-    navigate(`/envelope/${envelopeNumber}?page=${page}`);
+    setRequestedPage(page);
+    navigate(`/envelope/${envelopeNumber}`);
   }, [navigate]);
 
   const closeLetter = useCallback(() => {
@@ -84,8 +87,12 @@ function AppContent() {
 
   const handlePageSelect = useCallback(({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
     setCurrentEnvelope(envelopeIndex);
-    openLetter(envelopeIndex + 1, pageIndex);
-  }, [openLetter]);
+    if (isLetterOpen && letterNumber === envelopeIndex + 1) {
+      letterStackRef.current?.goToPage(pageIndex);
+    } else {
+      openLetter(envelopeIndex + 1, pageIndex);  // sets requestedPage
+    }
+  }, [openLetter, isLetterOpen, letterNumber]);
 
   // Tab + Space only (EnvelopeStackScrollable owns arrow keys + scroll)
   useEffect(() => {
@@ -265,10 +272,12 @@ function AppContent() {
       <AnimatePresence>
         {isLetterOpen && (
           <LetterStack
+            ref={letterStackRef}
             key="letter-stack"
             number={letterNumber!}
             onClose={closeLetter}
-            initialPage={initialPage}
+            initialPage={requestedPage ?? deepLinkPage}
+            onPageConsumed={() => setRequestedPage(null)}
             language={language}
             unlocked={env29Unlocked}
           />
