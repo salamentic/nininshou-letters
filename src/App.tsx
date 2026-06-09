@@ -27,7 +27,8 @@ function AppContent() {
 
   const letterNumber = num ? (parseInt(num) || null) : null;
   const isLetterOpen = letterNumber !== null && letterNumber >= 1 && letterNumber <= ENVELOPE_COUNT;
-  const initialPage = parseInt(new URLSearchParams(location.search).get('page') ?? '0') || 0;
+  const pageParam = new URLSearchParams(location.search).get('page');
+  const initialPage = pageParam !== null ? (parseInt(pageParam) || 0) : null;
 
   // Current envelope in the stack — local state, URL plays no role here
   const [currentEnvelope, setCurrentEnvelope] = useState(() => {
@@ -73,7 +74,7 @@ function AppContent() {
 
   const openLetter = useCallback((envelopeNumber: number, page = 0) => {
     playEnvelopeSoundRef.current();
-    navigate(`/envelope/${envelopeNumber}${page > 0 ? `?page=${page}` : ''}`);
+    navigate(`/envelope/${envelopeNumber}?page=${page}`);
   }, [navigate]);
 
   const closeLetter = useCallback(() => {

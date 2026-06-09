@@ -50,7 +50,7 @@ function stampStyles(pageId: string): { wrapper: React.CSSProperties; img: React
 interface Props {
   onClose: () => void;
   number: number;
-  initialPage?: number;
+  initialPage?: number | null;
   language: string;
   unlocked?: boolean;
 }
@@ -81,10 +81,12 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
     const container = ref.current;
     const raf = requestAnimationFrame(() => drawAnnotations(container));
     return () => cancelAnimationFrame(raf);
-  }, [html, fontScale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [html, fontScale, current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function drawAnnotations(container: HTMLElement) {
-    container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
+    setTimeout(() => {
+      container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
+    }, 100);
   }
 
   return (
@@ -153,10 +155,10 @@ function pageAnimate(i: number, current: number) {
 
 const snapScale = (s: number) => Math.round(s * 26) / 26;
 
-export default function LetterStack({ onClose, number, initialPage = 0, language, unlocked }: Props) {
+export default function LetterStack({ onClose, number, initialPage = null, language, unlocked }: Props) {
   const pages = useMemo(() => getEnvelopePages(number, unlocked), [number, unlocked]);
   const [current, setCurrent] = useState(() => {
-    if (initialPage > 0) return initialPage;
+    if (initialPage !== null) return initialPage;
     return parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0;
   });
   useEffect(() => { setCookie(`lastPage_${number}`, String(current)); }, [number, current]);
@@ -205,8 +207,8 @@ export default function LetterStack({ onClose, number, initialPage = 0, language
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const saved = parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0;
-    setCurrent(initialPage > 0 ? initialPage : saved);
+    if (initialPage !== null) { setCurrent(initialPage); return; }
+    setCurrent(parseInt(getCookie(`lastPage_${number}`) ?? '0') || 0);
   }, [number, initialPage]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { modalRef.current?.focus(); }, []);
 
