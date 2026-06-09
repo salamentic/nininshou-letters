@@ -141,9 +141,19 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
             />
             <Tooltip
               anchorSelect=".letter-content .note"
-              render={({ activeAnchor }) => activeAnchor?.getAttribute('data-note')}
+              render={({ activeAnchor }) => {
+                const text = activeAnchor?.getAttribute('data-note');
+                const img = activeAnchor?.getAttribute('data-note-img');
+                if (!img) return <span style={{ whiteSpace: 'pre-line' }}>{text}</span>;
+                return (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <img src={img} style={{ width: 'auto', maxHeight: 120, objectFit: 'cover', flexShrink: 0, borderRadius: 2, alignSelf: 'center' }} />
+                    {text && <span style={{ flex: 1, whiteSpace: 'pre-line' }}>{text}</span>}
+                  </div>
+                );
+              }}
               place="top-start"
-              style={{ width: '25vw', fontFamily: "'Caveat', cursive", fontSize: 13 * fontScale, lineHeight: 1.4, zIndex: 9999, background: '#2c2416', color: '#f5e6c8', borderRadius: 4, padding: '6px 10px' }}
+              style={{ width: 'clamp(220px, 25vw, 90vw)', fontFamily: "'Caveat', cursive", fontSize: 13 * fontScale, lineHeight: 1.4, zIndex: 9999, background: '#2c2416', color: '#f5e6c8', borderRadius: 4, padding: '6px 10px' }}
             />
             {page.pagetype !== 'flyer' && (() => {
               const s = stampStyles(page.page);

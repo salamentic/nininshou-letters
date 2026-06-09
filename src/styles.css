@@ -319,6 +319,7 @@ body {
 
 .letter-content .strikethrough {
   text-decoration: line-through;
+  text-decoration-thickness: 3px;
 }
 
 .letter-content .underline {
@@ -346,8 +347,10 @@ rough-notation {
 
 /* ── Hover annotations ── */
 .letter-content .note {
-  text-decoration: underline dashed currentColor;
-  text-decoration-thickness: 1px;
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: #4a7ab5;
+  text-decoration-thickness: 3px;
   text-underline-offset: 3px;
   cursor: help;
 }
