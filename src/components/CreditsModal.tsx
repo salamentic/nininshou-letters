@@ -25,25 +25,29 @@ export default function CreditsModal({ onClose }: Props) {
       >
         <div style={styles.header}>
           <span style={styles.title}>Credits</span>
+          <span style={styles.note}>Letters &amp; lyrics from 二人称 by Yorushika</span>
           <button onClick={onClose} style={styles.closeBtn} className="btn-close">✕</button>
         </div>
 
         <div style={styles.body}>
           <div style={styles.column}>
             <p style={styles.colHeading}>Translation</p>
-            <p style={styles.note}>Letters &amp; lyrics from 二人称 by Yorushika</p>
-            <p style={styles.note}> A, B, C, D, E</p>
+            <p style={styles.note}> Cyorter, Dinosou, Heiji Subaru, punkass, SakuraWindsS, Salamentic, Yuujin</p>
+            <p style={{ ...styles.note, marginTop: 8 }}> catfly, Loafer </p>
+            <p style={{ ...styles.note, marginTop: 8 }}>
+            Suggestion blurb for who to reach out for TL stuff to Cyo/Whoever wishes to take the hit :^]
+            </p>
           </div>
 
           <div style={styles.divider} />
 
           <div style={styles.column}>
             <p style={styles.colHeading}>Website</p>
-            <p style={{ ...styles.note, marginTop: 16 }}>
+            <p style={{ ...styles.note}}>
             Salamentic, Cyo, Eru
             </p>
-            <p style={{ ...styles.note, marginTop: 16 }}>
-            For questions, bugs, suggestions etc, please reach out to Salamentic on Reddit or @andy_yoru on Twitter!
+            <p style={{ ...styles.note, marginTop: 8 }}>
+            For questions, bugs, suggestions etc, reach out to Salamentic on Reddit/@andy_yoru on Twitter!
             </p>
           </div>
         </div>
