@@ -32,29 +32,25 @@ export default function CreditsModal({ onClose }: Props) {
           <div style={styles.column}>
             <p style={styles.colHeading}>Translation</p>
             <p style={styles.note}>Letters &amp; lyrics from 二人称 by Yorushika</p>
-            <p style={styles.note}>Translated by [Odorushika Translation Team]</p>
+            <p style={styles.note}> A, B, C, D, E</p>
           </div>
 
           <div style={styles.divider} />
 
           <div style={styles.column}>
             <p style={styles.colHeading}>Website</p>
-            <p style={styles.note}>React · TypeScript · Vite · Framer Motion</p>
             <p style={{ ...styles.note, marginTop: 16 }}>
-              <a
-                href="https://github.com/salamentic/nininshou-letters"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={styles.link}
-              >
-                Source on GitHub ↗
-              </a>
+            Salamentic, Cyo, Eru
+            </p>
+            <p style={{ ...styles.note, marginTop: 16 }}>
+            For questions, bugs, suggestions etc, please reach out to Salamentic on Reddit or @andy_yoru on Twitter!
             </p>
           </div>
         </div>
 
         <p style={styles.footer}>
-          All original content belongs to Yorushika / ソニーミュージックレーベルズ
+          All original content belongs to Yorushika / ソニーミュージックレーベルズ and n-buna.
+          This is a fan-made TL and website made to allow overseas fans to experience the magic of the epistolary novel Nininshou.
         </p>
       </motion.div>
     </motion.div>,
@@ -72,7 +68,7 @@ const styles: Record<string, React.CSSProperties> = {
   modal: {
     background: '#f5e6c8',
     borderRadius: 14,
-    width: 'min(560px, 90vw)',
+    width: 'min(900px, 90vw)',
     boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
     overflow: 'hidden',
     display: 'flex',
@@ -85,18 +81,18 @@ const styles: Record<string, React.CSSProperties> = {
   },
   title: {
     fontFamily: "'Caveat', cursive",
-    fontSize: 26,
-    color: '#5a4a3a',
+    fontSize: 36,
+    color: '#000',
     fontWeight: 600,
   },
   closeBtn: {
     width: 32, height: 32,
     borderRadius: '50%',
-    border: '1px solid #ddd',
+    border: '1.5px solid #000',
     background: 'none',
     cursor: 'pointer',
     fontSize: 14,
-    color: '#888',
+    color: '#000',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.15s',
   } as React.CSSProperties,
@@ -119,31 +115,24 @@ const styles: Record<string, React.CSSProperties> = {
     alignSelf: 'stretch',
   },
   colHeading: {
-    fontSize: 11,
+    fontSize: 18,
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
-    color: '#999',
+    color: '#000',
     marginBottom: 10,
     fontFamily: 'sans-serif',
   },
   note: {
     fontFamily: "'Caveat', cursive",
-    fontSize: 15,
-    color: '#7a6a5a',
+    fontSize: 22,
+    color: '#000',
     margin: 0,
     lineHeight: 1.4,
   },
-  link: {
-    color: '#5a4a3a',
-    fontFamily: "'Caveat', cursive",
-    fontSize: 15,
-    textDecoration: 'underline',
-    textUnderlineOffset: 3,
-  },
   footer: {
-    fontSize: 12,
+    fontSize: 16,
     fontFamily: 'sans-serif',
-    color: '#aaa',
+    color: '#000',
     textAlign: 'center',
     padding: '12px 20px 16px',
     borderTop: '1px solid rgba(90,74,58,0.1)',
