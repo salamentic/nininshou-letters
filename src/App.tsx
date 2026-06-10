@@ -248,9 +248,6 @@ function AppContent() {
 
       <div className="desktop-only" style={{ position: 'fixed', bottom: 80, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-          <a href="#" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
-            Google Docs version link →
-          </a>
           <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
             Original site →
           </a>
