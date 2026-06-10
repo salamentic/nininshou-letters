@@ -62,6 +62,7 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               onClick={() => setOpen(false)}
             />
             <motion.nav
@@ -69,7 +70,7 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
+              transition={{ type: 'tween', duration: 0.22, ease: [0.25, 0, 0.25, 1] }}
             >
               <p style={styles.heading}>Envelopes</p>
               {Array.from({ length: envelopeCount }, (_, i) => {
@@ -100,6 +101,7 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
+                          transition={{ type: 'tween', duration: 0.18, ease: 'easeOut' }}
                           style={{ overflow: 'hidden' }}
                         >
                           {pages.map((page, j) => (

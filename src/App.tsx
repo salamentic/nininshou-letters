@@ -145,7 +145,7 @@ function AppContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 1.4, ease: 'easeInOut' }}
           style={{
             position: 'fixed', inset: 0, zIndex: -1,
             backgroundImage: `url(${bgImage(currentEnvelope)})`,
@@ -191,6 +191,11 @@ function AppContent() {
             <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
             <span><kbd style={styles.kbd}>tab</kbd> menu</span>
             <span><kbd style={styles.kbd}>esc</kbd> close</span>
+            <span style={{ borderTop: '1px solid rgba(90,74,58,0.2)', marginTop: 4, paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 3, background: '#f5e6c8', margin: '4px -16px -10px', padding: '6px 16px 10px', borderRadius: 8 }}>
+              <span style={{ fontFamily: "'Caveat', cursive", color: '#5a4a3a', fontSize: 15 }}>Boy's writing</span>
+              <span style={{ fontFamily: "'La Belle Aurore', cursive", color: '#c0392b', fontSize: 15 }}>Sensei's writing</span>
+              <span className="note" style={{ fontFamily: "'Caveat', cursive", color: '#5a4a3a', fontSize: 15, cursor: 'default', pointerEvents: 'none' }}>TL notes: hover over/tap<br />for info when in letter</span>
+            </span>
           </div>
         </div>
       </div>

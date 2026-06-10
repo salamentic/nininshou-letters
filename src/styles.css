@@ -345,8 +345,10 @@ rough-notation {
   display: block;
 }
 
+.tooltip-wide { width: clamp(300px, 50vw, 90vw) !important; }
+
 /* ── Hover annotations ── */
-.letter-content .note {
+.note {
   text-decoration-line: underline;
   text-decoration-style: dashed;
   text-decoration-color: #4a7ab5;

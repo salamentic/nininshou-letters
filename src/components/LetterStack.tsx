@@ -401,7 +401,7 @@ export default LetterStack;
 
 const styles: Record<string, React.CSSProperties> = {
   fullPage:    { position: 'fixed', inset: 0, background: '#f5e6c8', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 100 },
-  header:      { padding: '20px 20px 16px 72px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
+  header:      { padding: '20px 20px 16px 120px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
   page:        { position: 'absolute', inset: 0, transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' },
   manuscript:  {
@@ -420,10 +420,10 @@ const styles: Record<string, React.CSSProperties> = {
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
 navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '16px 24px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 38, height: 38, borderRadius: '50%', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: 16, color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
-  fontBtn:     { background: 'none', border: 'none', fontSize: 15, cursor: 'pointer', color: '#888', padding: '0 8px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em' } as React.CSSProperties,
+  fontBtn:     { background: 'none', border: '1px solid #000', fontSize: 20, cursor: 'pointer', color: '#000', padding: '8px 16px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em', borderRadius: 6 } as React.CSSProperties,
   pageBtn:         { width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },
   pageBtnActive:   { background: '#333', color: '#fff' },
   pageBtnUnlocked: { outline: '1.5px solid #c0392b', outlineOffset: '2px' },
   loading:       { flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  loadingIcon:   { width: 72, height: 72, opacity: 0.35, animation: 'pulse 1.4s ease-in-out infinite' },
+  loadingIcon:   { width: 72, height: 72, opacity: 1, animation: 'pulse 1.4s ease-in-out infinite' },
 };
