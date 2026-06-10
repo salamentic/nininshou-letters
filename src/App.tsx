@@ -247,9 +247,14 @@ function AppContent() {
       </nav>
 
       <div className="desktop-only" style={{ position: 'fixed', bottom: 80, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-        <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
-          Original site →
-        </a>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <a href="#" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
+            Google Docs version link →
+          </a>
+          <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
+            Original site →
+          </a>
+        </div>
         <a href="https://www.cdjapan.co.jp/product/NEOBK-3159512" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
           Buy the original, physical copy here or on any other proxy site →
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
