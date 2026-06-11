@@ -475,6 +475,12 @@
         "pagetype": "manuscript"
       },
       {
+        "page": "13-5",
+        "date": "6/23",
+        "author": "sensei",
+        "pagetype": "manuscript"
+      },
+      {
         "page": "13-6",
         "date": "6/23",
         "author": "sensei",
@@ -490,7 +496,7 @@
         "page": "13-8",
         "date": "6/30",
         "author": "sensei",
-        "pagetype": "manuscript"
+        "pagetype": "lined"
       },
       {
         "page": "13-8(2)",
