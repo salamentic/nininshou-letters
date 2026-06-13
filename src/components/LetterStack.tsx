@@ -258,8 +258,8 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
     const pageEl = pageRefs.current[current];
     if (!pageEl) return;
     pageEl.scrollTop = dirRef.current === 1 ? 0 : pageEl.scrollHeight;
-    // Mobile: start scrolled right so main text is visible; left margin is off-screen.
-    pageEl.scrollLeft = window.matchMedia('(max-width: 640px)').matches ? 110 : 0;
+    // Mobile: scroll to max so text is fully visible with left margin just peeking in.
+    pageEl.scrollLeft = window.matchMedia('(max-width: 640px)').matches ? pageEl.scrollWidth : 0;
   }, [current]);
 
   useEffect(() => {
@@ -336,7 +336,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
       exit={{ y: '100%' }}
       transition={{ type: 'tween', duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
     >
-      <div style={styles.header}>
+      <div style={styles.header} className="letter-header">
         <span>Envelope {number}{envelopeDate ? `, ${envelopeDate}` : ''}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button

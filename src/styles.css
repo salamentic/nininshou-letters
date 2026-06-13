@@ -153,12 +153,22 @@ body {
   }
   .letter-page .letter-content {
     padding-left: 110px;
-    padding-right: 130px;
-    min-width: calc(100% + 280px);
+    padding-right: 20px;
+    min-width: calc(100% + 110px);
   }
   .stamp-wrapper {
     margin-right: 0;
-    min-width: calc(100% + 280px);
+    min-width: calc(100% + 110px);
+  }
+  .letter-header {
+    padding-left: 70px !important;
+    font-size: 17px !important;
+  }
+  .letter-header > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 }
 
