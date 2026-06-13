@@ -56,13 +56,28 @@ export default function FirstVisitIntro({ onDone, onStartExit }: Props) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             cursor: 'pointer',
             userSelect: 'none',
-            padding: '0 10vw',
+            padding: '15vh 10vw 0',
+            overflow: 'hidden',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32, maxWidth: 720, width: '100%' }}>
+          <img
+            src="/letters/landing.png"
+            alt=""
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '25%',
+              height: 'auto',
+              opacity: 0.5,
+              pointerEvents: 'none',
+            }}
+          />
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 32, maxWidth: 720, width: '100%' }}>
             {PARAGRAPHS.map((text, i) => (
               currentPara >= i && (
                 <motion.div
@@ -89,11 +104,15 @@ export default function FirstVisitIntro({ onDone, onStartExit }: Props) {
             animate={{ opacity: 0.45 }}
             transition={{ delay: 1.5, duration: 1 }}
             style={{
-              marginTop: 40,
+              position: 'absolute',
+              bottom: '6vh',
+              left: '50%',
+              transform: 'translateX(-50%)',
               fontFamily: "'Caveat', cursive",
               fontSize: 16,
               color: '#5a4a3a',
               letterSpacing: '0.08em',
+              whiteSpace: 'nowrap',
             }}
           >
             click anywhere to skip
