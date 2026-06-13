@@ -124,13 +124,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
       className="letter-page"
       style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}), ...(page.pagetype === 'flyer' ? { background: '#c9c3bb', justifyContent: 'center' } : {}) }}
     >
-      <motion.div
-        className="letter-progress-bar"
-        style={styles.progressBar}
-        animate={{ scaleX: (current + 1) / total }}
-        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-      />
-      <p style={{ ...styles.label, fontSize: 22 * fontScale }}>{page.paired_with || page.page}</p>
+<p style={{ ...styles.label, fontSize: 22 * fontScale }}>{page.paired_with || page.page}</p>
       {html === null
         ? <div style={styles.loading}><img src="/flower.png" alt="" style={styles.loadingIcon} /></div>
         : <>
@@ -415,8 +409,7 @@ const styles: Record<string, React.CSSProperties> = {
       'linear-gradient(160deg, #ede0c4 0%, #e8d5aa 40%, #dcc890 100%)',
     ].join(', '),
   } as React.CSSProperties,
-  progressBar: { position: 'sticky', top: 0, height: 3, background: '#333', transformOrigin: 'left', marginBottom: 28 } as React.CSSProperties,
-  label:       { color: '#5a4a3a', marginBottom: 16, fontFamily: "'Caveat', cursive" },
+  label:       { color: '#5a4a3a', marginTop: 28, marginBottom: 16, fontFamily: "'Caveat', cursive" },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
 navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '16px 24px', lineHeight: 1 } as React.CSSProperties,
   closeBtn:    { width: 38, height: 38, borderRadius: '50%', border: '1.5px solid #000', background: 'none', cursor: 'pointer', fontSize: 16, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,

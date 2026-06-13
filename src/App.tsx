@@ -13,6 +13,8 @@ import LetterStack, { type LetterStackHandle } from './components/LetterStack';
 import spotifyData from './assets/spotify_embeds.json';
 import { getCookie, setCookie } from './lib/cookies';
 import CreditsModal from './components/CreditsModal';
+import IntroAnimation from './components/IntroAnimation';
+import FirstVisitIntro from './components/FirstVisitIntro';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -49,6 +51,8 @@ function AppContent() {
   const [creditsOpen, setCreditsOpen] = useState(false);
   const [language, setLanguage] = useState('en');
   const [env29Unlocked, setEnv29Unlocked] = useState(() => getCookie('env29Unlocked') === '1');
+  const [showFirstVisit, setShowFirstVisit] = useState(() => getCookie('hasVisited') !== '1');
+  const [showIntro, setShowIntro] = useState(() => getCookie('hasVisited') === '1');
 
   useEffect(() => {
     if (letterNumber === 29 && !env29Unlocked) {
@@ -220,6 +224,20 @@ function AppContent() {
       <AnimatePresence>
         {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
       </AnimatePresence>
+
+      {showIntro && (
+        <IntroAnimation onDone={() => setShowIntro(false)} />
+      )}
+
+      {showFirstVisit && (
+        <FirstVisitIntro
+          onStartExit={() => setShowIntro(true)}
+          onDone={() => {
+            setCookie('hasVisited', '1');
+            setShowFirstVisit(false);
+          }}
+        />
+      )}
 
       <ToastContainer position="bottom-center" autoClose={4000} theme="dark" />
 
