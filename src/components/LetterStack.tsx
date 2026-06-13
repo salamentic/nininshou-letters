@@ -80,6 +80,16 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
       .catch(() => setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // On mobile, scroll past the left margin once content is in the DOM.
+  useEffect(() => {
+    if (i !== current || !ref.current || !html) return;
+    const el = ref.current;
+    const raf = requestAnimationFrame(() => {
+      if (window.matchMedia('(max-width: 640px)').matches) el.scrollLeft = el.scrollWidth;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [i, current, html]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Redraw annotations after first paint and after font-scale reflow.
   useEffect(() => {
     if (i !== current || !ref.current || !html) return;
@@ -258,8 +268,8 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
     const pageEl = pageRefs.current[current];
     if (!pageEl) return;
     pageEl.scrollTop = dirRef.current === 1 ? 0 : pageEl.scrollHeight;
-    // Mobile: scroll to max so text is fully visible with left margin just peeking in.
-    pageEl.scrollLeft = window.matchMedia('(max-width: 640px)').matches ? pageEl.scrollWidth : 0;
+    // Mobile: scroll past the left margin so text starts in view (caught by LetterPage on first load).
+    pageEl.scrollLeft = window.matchMedia('(max-width: 640px)').matches ? 110 : 0;
   }, [current]);
 
   useEffect(() => {

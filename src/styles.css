@@ -170,6 +170,9 @@ body {
     white-space: nowrap;
     min-width: 0;
   }
+  .letter-content::before {
+    left: 110px;
+  }
 }
 
 .stamp-wrapper {
