@@ -22,6 +22,23 @@ const ENVELOPE_COUNT = 32;
 const BG_IMAGES = new Set([0, 1, 2, 3, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 31]);
 const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.png`;
 
+function InstructionsContent() {
+  return (
+    <div style={styles.instructions}>
+      <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
+      <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
+      <span><kbd style={styles.kbd}>tab</kbd> menu</span>
+      <span><kbd style={styles.kbd}>esc</kbd> close</span>
+      <span>Make sure to scroll left to right as well. There's often texts in the margins.</span>
+      <span style={{ borderTop: '1px solid rgba(90,74,58,0.2)', marginTop: 6, paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <span style={{ fontFamily: "'Caveat', cursive", color: '#5a4a3a', fontSize: 15 }}>Boy's writing</span>
+        <span style={{ fontFamily: "'La Belle Aurore', cursive", color: '#c0392b', fontSize: 15 }}>Sensei's writing</span>
+        <span className="note" style={{ fontFamily: "'Caveat', cursive", color: '#5a4a3a', fontSize: 15, cursor: 'default', pointerEvents: 'none' }}>TL notes: hover over/tap<br />for info when in letter</span>
+      </span>
+    </div>
+  );
+}
+
 function AppContent() {
   const { num } = useParams<{ num?: string }>();
   const navigate = useNavigate();
@@ -49,6 +66,7 @@ function AppContent() {
   const [requestedPage, setRequestedPage] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [language, setLanguage] = useState('en');
   const [env29Unlocked, setEnv29Unlocked] = useState(() => getCookie('env29Unlocked') === '1');
   const [showFirstVisit, setShowFirstVisit] = useState(() => getCookie('hasVisited') !== '1');
@@ -190,17 +208,7 @@ function AppContent() {
 
       <div style={{ position: 'fixed', bottom: 80, left: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
         <div className="desktop-only" style={{ ...styles.buyLink }}>
-          <div style={styles.instructions}>
-            <span><kbd style={styles.kbd}>←</kbd> <kbd style={styles.kbd}>→</kbd> navigate</span>
-            <span><kbd style={styles.kbd}>space</kbd> open envelope</span>
-            <span><kbd style={styles.kbd}>tab</kbd> menu</span>
-            <span><kbd style={styles.kbd}>esc</kbd> close</span>
-            <span style={{ borderTop: '1px solid rgba(90,74,58,0.2)', marginTop: 4, paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 3, background: '#f5e6c8', margin: '4px -16px -10px', padding: '6px 16px 10px', borderRadius: 8 }}>
-              <span style={{ fontFamily: "'Caveat', cursive", color: '#5a4a3a', fontSize: 15 }}>Boy's writing</span>
-              <span style={{ fontFamily: "'La Belle Aurore', cursive", color: '#c0392b', fontSize: 15 }}>Sensei's writing</span>
-              <span className="note" style={{ fontFamily: "'Caveat', cursive", color: '#5a4a3a', fontSize: 15, cursor: 'default', pointerEvents: 'none' }}>TL notes: hover over/tap<br />for info when in letter</span>
-            </span>
-          </div>
+          <InstructionsContent />
         </div>
       </div>
 
@@ -223,6 +231,50 @@ function AppContent() {
 
       <AnimatePresence>
         {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {helpOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setHelpOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 200,
+              background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: 'rgba(245,230,200,0.97)', borderRadius: 16,
+                padding: '28px 28px 24px', boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
+                border: '1px solid rgba(180,150,100,0.4)',
+                display: 'flex', flexDirection: 'column', gap: 2,
+                fontFamily: "'Caveat', cursive", fontSize: 20, color: '#000',
+                minWidth: 220,
+              }}
+            >
+              <InstructionsContent />
+              <button
+                onClick={() => setHelpOpen(false)}
+                style={{
+                  marginTop: 16, alignSelf: 'center',
+                  fontFamily: "'Caveat', cursive", fontSize: 18, color: '#3a2e22',
+                  background: 'transparent', border: '1px solid rgba(90,74,58,0.3)',
+                  borderRadius: 8, padding: '4px 20px', cursor: 'pointer',
+                }}
+              >
+                close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {showIntro && (
@@ -264,8 +316,27 @@ function AppContent() {
         )}
       </nav>
 
+      <button
+        className="mobile-only"
+        onClick={() => setHelpOpen(true)}
+        style={{
+          position: 'fixed', bottom: 24, right: 20, zIndex: 50,
+          width: 36, height: 36, borderRadius: '50%',
+          background: 'rgba(245,230,200,0.75)', backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(180,150,100,0.4)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+          fontFamily: 'system-ui, sans-serif', fontSize: 20, color: '#3a2e22',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0,
+        }}
+      >
+        ?
+      </button>
+
       <div className="desktop-only" style={{ position: 'fixed', bottom: 80, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <a href="https://app.youform.com/forms/z5zy6naf" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
+            fan-mail project →
+          </a>
           <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
             Original site →
           </a>
@@ -334,6 +405,8 @@ const styles: Record<string, React.CSSProperties> = {
     width: 36, height: 36, borderRadius: '50%', border: 'none',
     background: 'transparent', cursor: 'pointer', fontSize: 16,
     fontFamily: "'Caveat', cursive", color: '#000', transition: 'all 0.2s',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    lineHeight: 1,
   },
   tabActive: { background: '#000', color: '#fff' },
   buyLink: {

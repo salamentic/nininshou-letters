@@ -37,6 +37,7 @@ export default function IntroAnimation({ onDone }: Props) {
           <TegakiRenderer
             font={kleeOne}
             onComplete={() => setTimeout(dismiss, 1000)}
+            time={{ mode: 'uncontrolled', speed: 1, loop: true }}
             style={{
               fontSize: '96px',
               color: '#3a2e22',

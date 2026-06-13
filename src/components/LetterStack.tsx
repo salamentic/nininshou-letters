@@ -363,7 +363,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
           >A+</button>
           <button
             onClick={onClose}
-            style={styles.closeBtn}
+            style={{ ...styles.closeBtn, marginLeft: 20 }}
             className="btn-close"
           >✕</button>
         </div>
@@ -405,7 +405,7 @@ export default LetterStack;
 
 const styles: Record<string, React.CSSProperties> = {
   fullPage:    { position: 'fixed', inset: 0, background: '#f5e6c8', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 100 },
-  header:      { padding: '20px 20px 16px 120px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, fontWeight: 500 },
+  header:      { padding: '20px 20px 16px 120px', borderBottom: '1px solid rgba(90,74,58,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 32, fontWeight: 500 },
   stack:       { position: 'relative', flex: 1, overflow: 'hidden' },
   page:        { position: 'absolute', inset: 0, transformOrigin: 'top left', overflowY: 'auto', background: '#f5e6c8', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' },
   manuscript:  {
@@ -421,7 +421,7 @@ const styles: Record<string, React.CSSProperties> = {
   } as React.CSSProperties,
   label:       { color: '#5a4a3a', marginTop: 28, marginBottom: 16, fontFamily: "'Caveat', cursive" },
   footer:      { padding: '12px 16px', borderTop: '1px solid rgba(90,74,58,0.2)', display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'center' },
-navBtn:      { background: 'none', border: 'none', fontSize: 26, cursor: 'pointer', color: '#555', padding: '16px 24px', lineHeight: 1 } as React.CSSProperties,
+navBtn:      { width: 38, height: 38, borderRadius: '50%', border: '1.5px solid rgba(90,74,58,0.35)', background: 'rgba(245,230,200,0.6)', cursor: 'pointer', fontSize: 22, color: '#3a2e22', fontFamily: 'system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, transition: 'all 0.15s', flexShrink: 0 } as React.CSSProperties,
   closeBtn:    { width: 38, height: 38, borderRadius: '50%', border: '1.5px solid #000', background: 'none', cursor: 'pointer', fontSize: 16, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' } as React.CSSProperties,
   fontBtn:     { background: 'none', border: '1px solid #000', fontSize: 20, cursor: 'pointer', color: '#000', padding: '8px 16px', lineHeight: 1, fontFamily: 'sans-serif', letterSpacing: '0.02em', borderRadius: 6 } as React.CSSProperties,
   pageBtn:         { width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 16, fontFamily: "'Caveat', cursive", color: '#555', transition: 'all 0.2s' },

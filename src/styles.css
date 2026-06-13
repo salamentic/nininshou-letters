@@ -188,6 +188,11 @@ body {
   .desktop-only { display: none !important; }
 }
 
+/* ── Mobile-only elements ── */
+@media (min-width: 641px) {
+  .mobile-only { display: none !important; }
+}
+
 /* ── Button hovers ── */
 .btn-close:hover { background: #f0f0f0 !important; border-color: #bbb !important; color: #333 !important; }
 .btn-nav:hover:not(:disabled) { color: #111; background: rgba(0,0,0,0.06); border-radius: 6px; }
