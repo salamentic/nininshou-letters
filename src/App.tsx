@@ -13,6 +13,7 @@ import LetterStack, { type LetterStackHandle } from './components/LetterStack';
 import spotifyData from './assets/spotify_embeds.json';
 import { getCookie, setCookie } from './lib/cookies';
 import CreditsModal from './components/CreditsModal';
+import HelpModal from './components/HelpModal';
 import IntroAnimation from './components/IntroAnimation';
 import FirstVisitIntro from './components/FirstVisitIntro';
 import { ToastContainer, toast } from 'react-toastify';
@@ -20,7 +21,50 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const ENVELOPE_COUNT = 32;
 const BG_IMAGES = new Set([0, 1, 2, 3, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 31]);
-const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.png`;
+const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.webp`;
+
+const styles: Record<string, React.CSSProperties> = {
+  tabs: {
+    position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+    display: 'flex', gap: 6, background: 'rgba(245,230,200,0.75)',
+    backdropFilter: 'blur(8px)', borderRadius: 999, padding: '6px 10px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.15)', zIndex: 50,
+  },
+  tab: {
+    width: 36, height: 36, borderRadius: '50%', border: 'none',
+    background: 'transparent', cursor: 'pointer', fontSize: 16,
+    fontFamily: "'Caveat', cursive", color: '#000', transition: 'all 0.2s',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    lineHeight: 1,
+  },
+  tabActive: { background: '#000', color: '#fff' },
+  buyLink: {
+    fontSize: 20, fontFamily: "'Caveat', cursive", color: '#3a2e22',
+    textDecoration: 'none', background: 'rgba(245, 230, 200, 0.45)',
+    backdropFilter: 'blur(6px)', border: '1px solid rgba(180,150,100,0.4)',
+    borderRadius: 10, padding: '10px 16px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    letterSpacing: '0.01em', lineHeight: 1.3, transition: 'all 0.2s', cursor: 'pointer',
+  },
+  kbd: {
+    display: 'inline-block', background: 'rgba(90,74,58,0.12)',
+    border: '1px solid rgba(90,74,58,0.3)', borderRadius: 4,
+    padding: '0px 5px', fontSize: 14, fontFamily: 'monospace',
+    lineHeight: '20px', verticalAlign: 'middle',
+  },
+  instructions: {
+    display: 'flex', flexDirection: 'column', gap: 2,
+    fontFamily: "'Caveat', cursive", fontSize: 18, color: '#000',
+    opacity: 0.7, pointerEvents: 'none', userSelect: 'none',
+  },
+  langSelect: {
+    fontFamily: "'Caveat', cursive", fontSize: 20, color: '#3a2e22',
+    background: 'rgba(245, 230, 200, 0.45)', backdropFilter: 'blur(6px)',
+    border: '1px solid rgba(180,150,100,0.4)', borderRadius: 10,
+    padding: '10px 18px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+    minWidth: 64, cursor: 'pointer', transition: 'all 0.2s',
+  } as React.CSSProperties,
+  tabEllipsis: { fontSize: 16, color: '#000', lineHeight: '36px', padding: '0 2px', userSelect: 'none' },
+};
 
 function InstructionsContent() {
   return (
@@ -80,32 +124,43 @@ function AppContent() {
     }
   }, [letterNumber]); // eslint-disable-line react-hooks/exhaustive-deps
   const [playEnvelopeSound] = useSound(envelopeSound, { volume: 0.5 });
-  useSound(flipSound, { volume: 0.05 });
   const playEnvelopeSoundRef = useRef(playEnvelopeSound);
   useEffect(() => { playEnvelopeSoundRef.current = playEnvelopeSound; }, [playEnvelopeSound]);
+  const lastEnvelopeSoundTime = useRef(0);
+  const [playFlip] = useSound(flipSound, { volume: 0.05 });
+  const playFlipRef = useRef(playFlip);
+  useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
   const [ready, setReady] = useState(false);
 
-  const stateRef = useRef({ currentEnvelope, isLetterOpen, menuOpen, creditsOpen });
-  useEffect(() => { stateRef.current = { currentEnvelope, isLetterOpen, menuOpen, creditsOpen }; }, [currentEnvelope, isLetterOpen, menuOpen, creditsOpen]);
+  const stateRef = useRef({ currentEnvelope, isLetterOpen, menuOpen, creditsOpen, helpOpen });
+  useEffect(() => { stateRef.current = { currentEnvelope, isLetterOpen, menuOpen, creditsOpen, helpOpen }; }, [currentEnvelope, isLetterOpen, menuOpen, creditsOpen, helpOpen]);
 
   useEffect(() => { setCookie('lastEnvelope', String(currentEnvelope)); }, [currentEnvelope]);
 
   useEffect(() => {
     const img = new Image();
-    img.src = '/nininshou_table_0.png';
+    img.src = '/nininshou_table_0.webp';
     Promise.all([document.fonts.ready, img.decode()]).then(() => setReady(true));
+    BG_IMAGES.forEach(i => { if (i === 0) return; new Image().src = `/nininshou_table_${i}.webp`; });
+  }, []);
+
+  const playEnvelopeSoundThrottled = useCallback(() => {
+    const now = Date.now();
+    if (now - lastEnvelopeSoundTime.current < 400) return;
+    lastEnvelopeSoundTime.current = now;
+    playEnvelopeSoundRef.current();
   }, []);
 
   const openLetter = useCallback((envelopeNumber: number, page: number | null = null) => {
-    playEnvelopeSoundRef.current();
+    playEnvelopeSoundThrottled();
     setRequestedPage(page);
     navigate(`/envelope/${envelopeNumber}`);
-  }, [navigate]);
+  }, [navigate, playEnvelopeSoundThrottled]);
 
   const closeLetter = useCallback(() => {
-    playEnvelopeSoundRef.current();
+    playEnvelopeSoundThrottled();
     navigate('/', { replace: true });
-  }, [navigate]);
+  }, [navigate, playEnvelopeSoundThrottled]);
 
   const handlePageSelect = useCallback(({ envelopeIndex, pageIndex }: { envelopeIndex: number; pageIndex: number }) => {
     setCurrentEnvelope(envelopeIndex);
@@ -119,8 +174,9 @@ function AppContent() {
   // Tab + Space only (EnvelopeStackScrollable owns arrow keys + scroll)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const { currentEnvelope: ce, isLetterOpen: ilo, menuOpen: mo, creditsOpen: co } = stateRef.current;
+      const { currentEnvelope: ce, isLetterOpen: ilo, menuOpen: mo, creditsOpen: co, helpOpen: ho } = stateRef.current;
       if (e.key === 'Escape') {
+        if (ho) { setHelpOpen(false); return; }
         if (co) { setCreditsOpen(false); return; }
         if (ilo) { closeLetter(); return; }
         if (mo) { setMenuOpen(false); return; }
@@ -167,7 +223,7 @@ function AppContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.4, ease: 'easeInOut' }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
           style={{
             position: 'fixed', inset: 0, zIndex: -1,
             backgroundImage: `url(${bgImage(currentEnvelope)})`,
@@ -214,7 +270,7 @@ function AppContent() {
 
       <div style={{ position: 'fixed', top: 28, right: 28, zIndex: 50, display: 'flex', gap: 8, alignItems: 'center' }}>
         <button
-          style={{ ...styles.buyLink, fontSize: 16, padding: '6px 14px' }}
+          style={styles.buyLink}
           className="btn-buy"
           onClick={() => setCreditsOpen(true)}
         >
@@ -234,47 +290,7 @@ function AppContent() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {helpOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setHelpOpen(false)}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 200,
-              background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={e => e.stopPropagation()}
-              style={{
-                background: 'rgba(245,230,200,0.97)', borderRadius: 16,
-                padding: '28px 28px 24px', boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
-                border: '1px solid rgba(180,150,100,0.4)',
-                display: 'flex', flexDirection: 'column', gap: 2,
-                fontFamily: "'Caveat', cursive", fontSize: 20, color: '#000',
-                minWidth: 220,
-              }}
-            >
-              <InstructionsContent />
-              <button
-                onClick={() => setHelpOpen(false)}
-                style={{
-                  marginTop: 16, alignSelf: 'center',
-                  fontFamily: "'Caveat', cursive", fontSize: 18, color: '#3a2e22',
-                  background: 'transparent', border: '1px solid rgba(90,74,58,0.3)',
-                  borderRadius: 8, padding: '4px 20px', cursor: 'pointer',
-                }}
-              >
-                close
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
+        {helpOpen && <HelpModal onClose={() => setHelpOpen(false)}><InstructionsContent /></HelpModal>}
       </AnimatePresence>
 
       {showIntro && (
@@ -335,17 +351,19 @@ function AppContent() {
       <div className="desktop-only" style={{ position: 'fixed', bottom: 80, right: 28, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <a href="https://app.youform.com/forms/z5zy6naf" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
-            fan-mail project →
+            Fan-Mail Project →
           </a>
           <a href="https://sp.universal-music.co.jp/yorushika/nininshou/" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
-            Original site →
+            Original Site →
           </a>
         </div>
         <a href="https://www.cdjapan.co.jp/product/NEOBK-3159512" target="_blank" rel="noopener noreferrer" style={styles.buyLink} className="btn-buy">
-          Buy the original, physical copy here or on any other proxy site →
+          Buy the original here or on other proxy sites →
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <img src="https://st.cdjapan.co.jp/pictures/l/16/19/NEOBK-3159512.jpg?v=2" alt="二人称 physical copy" style={{ width: 80, borderRadius: 4 }} />
+            <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.RXK5otWn_cbCnglPjTM7_AHaE8%3Fpid%3DApi&f=1&ipt=86d9bf5ad260323c8613f618d5ba9add1a5453cdbe0802302f504fee9407ace7&ipo=images" alt="二人称 physical copy" style={{ width: 80, borderRadius: 4 }} />
             <img src="https://sp.universal-music.co.jp/yorushika/nininshou/assets/images/product_image_01.jpg" alt="二人称 product" style={{ width: 80, borderRadius: 4 }} />
+            <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.bing.com%2Fth%2Fid%2FOIP.a3pbZkkW5YD7l1PLAcH8YAHaE8%3Fpid%3DApi&f=1&nofb=1" alt="二人称 product" style={{ width: 80, borderRadius: 4 }} />
+            <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.bing.com%2Fth%2Fid%2FOIP.hSgV4kLperJV2ogTcSTs5wHaE8%3Fpid%3DApi&f=1&nofb=1" alt="二人称 product" style={{ width: 80, borderRadius: 4 }} />
           </div>
         </a>
       </div>
@@ -372,6 +390,7 @@ function AppContent() {
             key="letter-stack"
             number={letterNumber!}
             onClose={closeLetter}
+            onFlipSound={() => playFlipRef.current()}
             initialPage={requestedPage ?? deepLinkPage}
             onPageConsumed={() => setRequestedPage(null)}
             language={language}
@@ -393,46 +412,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  tabs: {
-    position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-    display: 'flex', gap: 6, background: 'rgba(245,230,200,0.75)',
-    backdropFilter: 'blur(8px)', borderRadius: 999, padding: '6px 10px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.15)', zIndex: 50,
-  },
-  tab: {
-    width: 36, height: 36, borderRadius: '50%', border: 'none',
-    background: 'transparent', cursor: 'pointer', fontSize: 16,
-    fontFamily: "'Caveat', cursive", color: '#000', transition: 'all 0.2s',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    lineHeight: 1,
-  },
-  tabActive: { background: '#000', color: '#fff' },
-  buyLink: {
-    fontSize: 20, fontFamily: "'Caveat', cursive", color: '#3a2e22',
-    textDecoration: 'none', background: 'rgba(245, 230, 200, 0.45)',
-    backdropFilter: 'blur(6px)', border: '1px solid rgba(180,150,100,0.4)',
-    borderRadius: 10, padding: '10px 16px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-    letterSpacing: '0.01em', lineHeight: 1.3, transition: 'all 0.2s',
-  },
-  kbd: {
-    display: 'inline-block', background: 'rgba(90,74,58,0.12)',
-    border: '1px solid rgba(90,74,58,0.3)', borderRadius: 4,
-    padding: '0px 5px', fontSize: 14, fontFamily: 'monospace',
-    lineHeight: '20px', verticalAlign: 'middle',
-  },
-  instructions: {
-    display: 'flex', flexDirection: 'column', gap: 2,
-    fontFamily: "'Caveat', cursive", fontSize: 18, color: '#000',
-    opacity: 0.7, pointerEvents: 'none', userSelect: 'none',
-  },
-  langSelect: {
-    fontFamily: "'Caveat', cursive", fontSize: 16, color: '#3a2e22',
-    background: 'rgba(245, 230, 200, 0.45)', backdropFilter: 'blur(6px)',
-    border: '1px solid rgba(180,150,100,0.4)', borderRadius: 10,
-    padding: '6px 18px', boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-    minWidth: 64, cursor: 'pointer', transition: 'all 0.2s',
-  } as React.CSSProperties,
-  tabEllipsis: { fontSize: 16, color: '#000', lineHeight: '36px', padding: '0 2px', userSelect: 'none' },
-};

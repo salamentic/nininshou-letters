@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { TegakiRenderer } from 'tegaki/react';
-import kleeOne from 'tegaki/fonts/klee-one';
+import kleeOne from '@/assets/klee_one_nininsho/bundle';
 
 interface Props {
   onDone: () => void;
@@ -37,7 +37,7 @@ export default function IntroAnimation({ onDone }: Props) {
           <TegakiRenderer
             font={kleeOne}
             onComplete={() => setTimeout(dismiss, 1000)}
-style={{
+            style={{
               fontSize: '96px',
               color: '#3a2e22',
               lineHeight: 1.2,

@@ -233,28 +233,34 @@ body {
   margin-top: 0;
 }
 
-.letter-content.lined p,
-.letter-content.lined a:has(img) {
+.letter-content.lined {
   background-image: linear-gradient(#7aaed4 1px, transparent 1px);
   background-size: 100% calc(26px * var(--lc-scale, 1));
   background-repeat: repeat;
   background-position-y: calc(26px * var(--lc-scale, 1) * 0.78);
 }
-.letter-content.lined a:has(img) {
-  display: block;
-  background-position-y: var(--img-line-offset, calc(26px * var(--lc-scale, 1) * 0.78));
-}
 
-.letter-content.manuscript p,
-.letter-content.manuscript a:has(img) {
+.letter-content.manuscript {
   background-image: linear-gradient(#c4a468bb 1px, transparent 1px);
   background-size: 100% calc(26px * var(--lc-scale, 1));
   background-repeat: repeat;
   background-position-y: calc(26px * var(--lc-scale, 1) * 0.78);
 }
+
+.letter-content.lined a:has(img),
 .letter-content.manuscript a:has(img) {
   display: block;
-  background-position-y: var(--img-line-offset, calc(26px * var(--lc-scale, 1) * 0.78));
+}
+
+/* Add class="img-lines" to any <a><img> to snap its height to the ruled grid.
+   Override the count with style="--lines: N" on the element. */
+.letter-content .img-lines {
+  display: block;
+  height: calc(var(--lines, 8) * 25.5px * var(--lc-scale, 1));
+}
+.letter-content .img-lines img {
+  height: 100%;
+  width: auto;
 }
 
 .letter-content p {
@@ -357,10 +363,8 @@ rough-notation {
 }
 
 .letter-content .annotation {
-  font-family: 'Indie Flower', cursive;
-  font-size: calc(11px * var(--lc-scale, 1));
-  opacity: 0.65;
-  display: block;
+  font-size: calc(10px * var(--lc-scale, 1));
+  opacity: 0.95;
 }
 
 .tooltip-wide { width: clamp(300px, 50vw, 90vw) !important; }

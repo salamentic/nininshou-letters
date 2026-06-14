@@ -1,7 +1,7 @@
 import { memo, useState, useEffect, useImperativeHandle, forwardRef, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
-import envelopeImg from '@/assets/sample_envelope.png';
-import envelopeImgBack from '@/assets/sample_envelope_back.png';
+import envelopeImg from '@/assets/sample_envelope.webp';
+import envelopeImgBack from '@/assets/sample_envelope_back.webp';
 import { getEnvelopeDate } from '@/lib/parseLetters';
 
 export interface EnvelopeHandle {

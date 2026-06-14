@@ -3,11 +3,11 @@ import { useRef, useState, useEffect, useMemo, useCallback, useImperativeHandle,
 import { Tooltip } from 'react-tooltip';
 import { motion } from 'motion/react';
 import 'vanilla-rough-notation';
+// Fix library bug: connectedCallback uses this.animate (HTMLElement.animate method) instead of this.animation (boolean)
+{ const VRN = customElements.get('rough-notation') as any; if (VRN) Object.defineProperty(VRN.prototype, 'animate', { get(this: any) { return this.animation; }, configurable: true }); }
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import { getCookie, setCookie } from '@/lib/cookies';
-import boopSfx from '@/assets/flip.wav';
-import useSound from 'use-sound';
 
 function hashStr(s: string): number {
   let h = 0;
@@ -53,6 +53,7 @@ export interface LetterStackHandle {
 
 interface Props {
   onClose: () => void;
+  onFlipSound: () => void;
   number: number;
   initialPage?: number | null;
   onPageConsumed?: () => void;
@@ -74,10 +75,12 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
 
   useEffect(() => {
     const bust = (import.meta as any).env?.DEV ? `?t=${Date.now()}` : '';
-    fetch(`/letters/${language}/${page.paired_with || page.page}.html${bust}`)
+    const controller = new AbortController();
+    fetch(`/letters/${language}/${page.paired_with || page.page}.html${bust}`, { signal: controller.signal })
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(setHtml)
-      .catch(() => setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`));
+      .catch(err => { if (err.name !== 'AbortError') setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`); });
+    return () => controller.abort();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On mobile, scroll past the left margin once content is in the DOM.
@@ -90,34 +93,8 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
     return () => cancelAnimationFrame(raf);
   }, [i, current, html]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Redraw annotations after first paint and after font-scale reflow.
-  useEffect(() => {
-    if (i !== current || !ref.current || !html) return;
-    const container = ref.current;
-    const raf = requestAnimationFrame(() => {
-      drawAnnotations(container);
-      alignImageLines(container, fontScale);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [html, fontScale, current]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function alignImageLines(container: HTMLElement, scale: number) {
-    const lineH = Math.round(26 * scale);
-    const content = container.querySelector('.letter-content') as HTMLElement | null;
-    if (!content) return;
-    const contentTop = content.getBoundingClientRect().top;
-    content.querySelectorAll<HTMLElement>('a:has(img)').forEach(a => {
-      const imgTop = a.getBoundingClientRect().top - contentTop;
-      const offset = ((0.78 * lineH - imgTop % lineH) % lineH + lineH) % lineH;
-      a.style.setProperty('--img-line-offset', `${offset}px`);
-    });
-  }
-
-  function drawAnnotations(container: HTMLElement) {
-    setTimeout(() => {
-      container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
-    }, 100);
-  }
+  const animateProps = useMemo(() => pageAnimate(i, current), [i, current]);
+  const stamp = useMemo(() => stampStyles(page.page), [page.page]);
 
 
   return (
@@ -126,13 +103,10 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
         (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
         setPageRef(el);
       }}
-      animate={pageAnimate(i, current)}
+      animate={animateProps}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
-      onAnimationComplete={() => {
-        if (i === current && ref.current && html) drawAnnotations(ref.current);
-      }}
       className="letter-page"
-      style={{ ...styles.page, zIndex: total - i, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}), ...(page.pagetype === 'flyer' ? { background: '#c9c3bb', justifyContent: 'center' } : {}) }}
+      style={{ ...styles.page, zIndex: total - i, willChange: Math.abs(i - current) <= 2 ? 'transform, opacity' : undefined, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}), ...(page.pagetype === 'flyer' ? { background: '#c9c3bb', justifyContent: 'center' } : {}) }}
     >
 <p style={{ ...styles.label, fontSize: 22 * fontScale }}>{page.paired_with || page.page}</p>
       {html === null
@@ -143,7 +117,7 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
               style={{ '--lc-scale': fontScale, flexGrow: 1 } as React.CSSProperties}
               dangerouslySetInnerHTML={{ __html: html }}
             />
-            <Tooltip
+            {i === current && <Tooltip
               anchorSelect=".letter-content .note"
               render={({ activeAnchor }) => {
                 const text = activeAnchor?.getAttribute('data-note');
@@ -158,18 +132,15 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
               }}
               place="top-start"
               style={{ width: 'clamp(220px, 25vw, 90vw)', fontFamily: "'Caveat', cursive", fontSize: 13 * fontScale, lineHeight: 1.4, zIndex: 9999, background: '#2c2416', color: '#f5e6c8', borderRadius: 4, padding: '6px 10px' }}
-            />
-            {page.pagetype !== 'flyer' && (() => {
-              const s = stampStyles(page.page);
-              return (
-                <div className="stamp-wrapper" style={s.wrapper}>
-                  <img src="/flower.png" alt="" style={s.img} />
-                  {page.circle && (
-                    <img src="/circle_mark.svg" alt="" style={{ ...s.img, right: (s.img.right as number) + 34, bottom: (s.img.bottom as number) + 2 }} />
-                  )}
-                </div>
-              );
-            })()}
+            />}
+            {page.pagetype !== 'flyer' && (
+              <div className="stamp-wrapper" style={stamp.wrapper}>
+                <img src="/flower.png" alt="" style={stamp.img} />
+                {page.circle && (
+                  <img src="/circle_mark.svg" alt="" style={{ ...stamp.img, right: (stamp.img.right as number) + 34, bottom: (stamp.img.bottom as number) + 2 }} />
+                )}
+              </div>
+            )}
           </>
       }
     </motion.div>
@@ -190,7 +161,7 @@ function pageAnimate(i: number, current: number) {
 
 const snapScale = (s: number) => Math.round(s * 26) / 26;
 
-const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ onClose, number, initialPage = null, onPageConsumed, language, unlocked }, handle) {
+const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ onClose, onFlipSound, number, initialPage = null, onPageConsumed, language, unlocked }, handle) {
   const pages = useMemo(() => getEnvelopePages(number, unlocked), [number, unlocked]);
   const [current, setCurrent] = useState(() => {
     if (initialPage !== null) return initialPage;
@@ -200,9 +171,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
   useEffect(() => { setCookie(`lastPage_${number}`, String(current)); }, [number, current]);
   const [fontScale, setFontScale] = useState(() => snapScale(parseFloat(getCookie('fontScale') ?? '') || 1.0));
   useEffect(() => { setCookie('fontScale', String(fontScale)); }, [fontScale]);
-  const [playFlip] = useSound(boopSfx, { volume: 0.05 });
-  const playFlipRef = useRef(playFlip);
-  useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
+  const shouldPlayFlip = useRef(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -216,13 +185,15 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
   const envelopeDate = getEnvelopeDate(number);
 
   const navigatePage = useCallback((dir: 1 | -1) => {
+    shouldPlayFlip.current = false;
     setCurrent(c => {
       const next = dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0);
       if (next === c) return c;
       dirRef.current = dir;
-      playFlipRef.current();
+      shouldPlayFlip.current = true;
       return next;
     });
+    if (shouldPlayFlip.current) onFlipSound();
   }, [pages.length]);
 
   const scrollCurrentPage = useCallback((delta: number) => {
@@ -254,7 +225,6 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose(); return; }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigatePage(1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); navigatePage(-1); }
       else if (e.key === 'ArrowDown') { e.preventDefault(); scrollCurrentPage(180); }
@@ -262,7 +232,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, navigatePage, scrollCurrentPage]);
+  }, [navigatePage, scrollCurrentPage]);
 
   useEffect(() => {
     const pageEl = pageRefs.current[current];
@@ -391,7 +361,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
             key={i}
             className="btn-nav"
             style={{ ...styles.pageBtn, ...(i === current ? styles.pageBtnActive : {}), ...(page.hidden ? styles.pageBtnUnlocked : {}) }}
-            onClick={() => { dirRef.current = i >= current ? 1 : -1; playFlipRef.current(); setCurrent(i); }}
+            onClick={() => { if (i === current) return; dirRef.current = i > current ? 1 : -1; onFlipSound(); setCurrent(i); }}
           >{i + 1}</button>
         ))}
         <button className="btn-nav" style={styles.navBtn} onClick={() => navigatePage(1)} disabled={current === pages.length - 1}>›</button>
