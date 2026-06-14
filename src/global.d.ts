@@ -23,3 +23,5 @@ declare module '*.ttf' {
   const src: string;
   export default src;
 }
+declare module 'raphael';
+declare module 'dmak/dist/dmak.js';
