@@ -70,14 +70,17 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   fontScale: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const annotationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
     const bust = (import.meta as any).env?.DEV ? `?t=${Date.now()}` : '';
-    fetch(`/letters/${language}/${page.paired_with || page.page}.html${bust}`)
+    const controller = new AbortController();
+    fetch(`/letters/${language}/${page.paired_with || page.page}.html${bust}`, { signal: controller.signal })
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(setHtml)
-      .catch(() => setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`));
+      .catch(err => { if (err.name !== 'AbortError') setHtml(`<p class="annotation">(page not found: ${page.paired_with || page.page})</p>`); });
+    return () => controller.abort();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On mobile, scroll past the left margin once content is in the DOM.
@@ -98,7 +101,10 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
       drawAnnotations(container);
       alignImageLines(container, fontScale);
     });
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (annotationTimer.current) clearTimeout(annotationTimer.current);
+    };
   }, [html, fontScale, current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function alignImageLines(container: HTMLElement, scale: number) {
@@ -114,7 +120,8 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   }
 
   function drawAnnotations(container: HTMLElement) {
-    setTimeout(() => {
+    if (annotationTimer.current) clearTimeout(annotationTimer.current);
+    annotationTimer.current = setTimeout(() => {
       container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
     }, 100);
   }
@@ -203,6 +210,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
   const [playFlip] = useSound(boopSfx, { volume: 0.05 });
   const playFlipRef = useRef(playFlip);
   useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
+  const shouldPlayFlip = useRef(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
@@ -216,13 +224,15 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
   const envelopeDate = getEnvelopeDate(number);
 
   const navigatePage = useCallback((dir: 1 | -1) => {
+    shouldPlayFlip.current = false;
     setCurrent(c => {
       const next = dir === 1 ? Math.min(c + 1, pages.length - 1) : Math.max(c - 1, 0);
       if (next === c) return c;
       dirRef.current = dir;
-      playFlipRef.current();
+      shouldPlayFlip.current = true;
       return next;
     });
+    if (shouldPlayFlip.current) playFlipRef.current();
   }, [pages.length]);
 
   const scrollCurrentPage = useCallback((delta: number) => {
@@ -254,7 +264,6 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose(); return; }
       if (e.key === 'ArrowRight') { e.preventDefault(); navigatePage(1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); navigatePage(-1); }
       else if (e.key === 'ArrowDown') { e.preventDefault(); scrollCurrentPage(180); }
@@ -262,7 +271,7 @@ const LetterStack = forwardRef<LetterStackHandle, Props>(function LetterStack({ 
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, navigatePage, scrollCurrentPage]);
+  }, [navigatePage, scrollCurrentPage]);
 
   useEffect(() => {
     const pageEl = pageRefs.current[current];
