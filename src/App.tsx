@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import useSound from 'use-sound';
 import envelopeSound from './assets/envelope.wav';
+import flipSound from './assets/flip.wav';
 import './styles.css';
 import Envelope, { type EnvelopeHandle } from './components/Envelope';
 import EnvelopeStackScrollable from './components/EnvelopeStackScrollable';
@@ -126,6 +127,9 @@ function AppContent() {
   const playEnvelopeSoundRef = useRef(playEnvelopeSound);
   useEffect(() => { playEnvelopeSoundRef.current = playEnvelopeSound; }, [playEnvelopeSound]);
   const lastEnvelopeSoundTime = useRef(0);
+  const [playFlip] = useSound(flipSound, { volume: 0.05 });
+  const playFlipRef = useRef(playFlip);
+  useEffect(() => { playFlipRef.current = playFlip; }, [playFlip]);
   const [ready, setReady] = useState(false);
 
   const stateRef = useRef({ currentEnvelope, isLetterOpen, menuOpen, creditsOpen, helpOpen });
@@ -219,7 +223,7 @@ function AppContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.4, ease: 'easeInOut' }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
           style={{
             position: 'fixed', inset: 0, zIndex: -1,
             backgroundImage: `url(${bgImage(currentEnvelope)})`,
@@ -384,6 +388,7 @@ function AppContent() {
             key="letter-stack"
             number={letterNumber!}
             onClose={closeLetter}
+            onFlipSound={() => playFlipRef.current()}
             initialPage={requestedPage ?? deepLinkPage}
             onPageConsumed={() => setRequestedPage(null)}
             language={language}

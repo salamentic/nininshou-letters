@@ -35,6 +35,11 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
 
   const maxIndex = items.length - 1;
 
+  const currentIndexRef = useRef(currentIndex);
+  const maxIndexRef = useRef(maxIndex);
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
+  useEffect(() => { maxIndexRef.current = maxIndex; }, [maxIndex]);
+
   const finishScroll = useCallback(() => {
     isScrollingRef.current = false;
     setIsScrolling(false);
@@ -45,8 +50,10 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
       if (isScrollingRef.current) return;
       const now = Date.now();
       if (now - lastScrollTime.current < MIN_SCROLL_INTERVAL) return;
-      const newIndex = clamp(currentIndex + direction, 0, maxIndex);
-      if (newIndex !== currentIndex) {
+      const ci = currentIndexRef.current;
+      const mi = maxIndexRef.current;
+      const newIndex = clamp(ci + direction, 0, mi);
+      if (newIndex !== ci) {
         lastScrollTime.current = now;
         isScrollingRef.current = true;
         setIsScrolling(true);
@@ -54,7 +61,7 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
         setTimeout(finishScroll, TRANSITION_DURATION + SCROLL_TIMEOUT_OFFSET);
       }
     },
-    [currentIndex, maxIndex, finishScroll]
+    [finishScroll]
   );
 
   const handleWheel = useCallback(
@@ -86,7 +93,7 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
           break;
         case "Home":
           e.preventDefault();
-          if (currentIndex !== 0) {
+          if (currentIndexRef.current !== 0) {
             isScrollingRef.current = true;
             setIsScrolling(true);
             setCurrentIndex(0);
@@ -95,16 +102,16 @@ const ScrollableCardStack: React.FC<ScrollableCardStackProps> = ({ children, cla
           break;
         case "End":
           e.preventDefault();
-          if (currentIndex !== maxIndex) {
+          if (currentIndexRef.current !== maxIndexRef.current) {
             isScrollingRef.current = true;
             setIsScrolling(true);
-            setCurrentIndex(maxIndex);
+            setCurrentIndex(maxIndexRef.current);
             setTimeout(finishScroll, TRANSITION_DURATION + SCROLL_TIMEOUT_OFFSET);
           }
           break;
       }
     },
-    [currentIndex, maxIndex, scrollToCard, finishScroll]
+    [scrollToCard, finishScroll]
   );
 
   const touchStartY = useRef(0);
