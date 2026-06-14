@@ -21,7 +21,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const ENVELOPE_COUNT = 32;
 const BG_IMAGES = new Set([0, 1, 2, 3, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 24, 25, 31]);
-const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.png`;
+const bgImage = (i: number) => `/nininshou_table_${BG_IMAGES.has(i) ? i : 0}.webp`;
 
 const styles: Record<string, React.CSSProperties> = {
   tabs: {
@@ -139,9 +139,9 @@ function AppContent() {
 
   useEffect(() => {
     const img = new Image();
-    img.src = '/nininshou_table_0.png';
+    img.src = '/nininshou_table_0.webp';
     Promise.all([document.fonts.ready, img.decode()]).then(() => setReady(true));
-    BG_IMAGES.forEach(i => { if (i === 0) return; new Image().src = `/nininshou_table_${i}.png`; });
+    BG_IMAGES.forEach(i => { if (i === 0) return; new Image().src = `/nininshou_table_${i}.webp`; });
   }, []);
 
   const playEnvelopeSoundThrottled = useCallback(() => {
