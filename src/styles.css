@@ -363,10 +363,8 @@ rough-notation {
 }
 
 .letter-content .annotation {
-  font-family: 'Indie Flower', cursive;
-  font-size: calc(11px * var(--lc-scale, 1));
-  opacity: 0.65;
-  display: block;
+  font-size: calc(10px * var(--lc-scale, 1));
+  opacity: 0.95;
 }
 
 .tooltip-wide { width: clamp(300px, 50vw, 90vw) !important; }
