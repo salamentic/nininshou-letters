@@ -42,6 +42,8 @@ function BurgerMenu({ currentEnvelope, onSelect, onPageSelect, onOpen, envelopeC
       <button
         style={styles.burger}
         className="btn-burger"
+        aria-label="Open navigation menu"
+        aria-expanded={open}
         onClick={() => {
           setOpen(o => {
             if (!o) setTimeout(() => onOpen?.(), 0);

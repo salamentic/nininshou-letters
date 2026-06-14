@@ -10,6 +10,7 @@ export default function SpotifyPlayer({ link }: Props) {
       <AnimatePresence>
         {link && (
           <motion.div
+            key={link}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}

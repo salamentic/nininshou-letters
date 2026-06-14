@@ -34,7 +34,6 @@ export default function CreditsModal({ onClose }: Props) {
             <p style={styles.colHeading}>EN Translation</p>
             <p style={styles.note}> Cyorter, Dinosousuke, Eru Subaru, punkass, SakuraWindsS, Salamentic, Yuujin</p>
             <p style={{ ...styles.note, marginTop: 8 }}> Anemone, catfly, Loafer, Sukebar312</p>
-            <p style={{ ...styles.note, marginTop: 8 }}>Suggestion blurb for who to reach out for TL stuff to Cyo/Whoever wishes to take the hit :^]</p>
           </div>
 
           <div style={styles.divider} />
