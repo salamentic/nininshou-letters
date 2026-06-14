@@ -252,6 +252,17 @@ body {
   display: block;
 }
 
+/* Add class="img-lines" to any <a><img> to snap its height to the ruled grid.
+   Override the count with style="--lines: N" on the element. */
+.letter-content .img-lines {
+  display: block;
+  height: calc(var(--lines, 8) * 25.5px * var(--lc-scale, 1));
+}
+.letter-content .img-lines img {
+  height: 100%;
+  width: auto;
+}
+
 .letter-content p {
   margin: 0;
   white-space: pre-line;

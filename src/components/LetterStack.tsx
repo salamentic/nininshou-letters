@@ -3,6 +3,8 @@ import { useRef, useState, useEffect, useMemo, useCallback, useImperativeHandle,
 import { Tooltip } from 'react-tooltip';
 import { motion } from 'motion/react';
 import 'vanilla-rough-notation';
+// Fix library bug: connectedCallback uses this.animate (HTMLElement.animate method) instead of this.animation (boolean)
+{ const VRN = customElements.get('rough-notation') as any; if (VRN) Object.defineProperty(VRN.prototype, 'animate', { get(this: any) { return this.animation; }, configurable: true }); }
 import { getEnvelopePages, getEnvelopeDate } from '@/lib/parseLetters';
 import type { Letter } from '@/lib/parseLetters';
 import { getCookie, setCookie } from '@/lib/cookies';
@@ -69,7 +71,6 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
   fontScale: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const annotationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,28 +93,8 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
     return () => cancelAnimationFrame(raf);
   }, [i, current, html]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Redraw annotations after first paint and after font-scale reflow.
-  useEffect(() => {
-    if (i !== current || !ref.current || !html) return;
-    const container = ref.current;
-    const raf = requestAnimationFrame(() => {
-      drawAnnotations(container);
-    });
-    return () => {
-      cancelAnimationFrame(raf);
-      if (annotationTimer.current) clearTimeout(annotationTimer.current);
-    };
-  }, [html, fontScale, current]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const animateProps = useMemo(() => pageAnimate(i, current), [i, current]);
   const stamp = useMemo(() => stampStyles(page.page), [page.page]);
-
-  function drawAnnotations(container: HTMLElement) {
-    if (annotationTimer.current) clearTimeout(annotationTimer.current);
-    annotationTimer.current = setTimeout(() => {
-      container.querySelectorAll('rough-notation').forEach(el => (el as any).show());
-    }, 100);
-  }
 
 
   return (
@@ -124,9 +105,6 @@ function LetterPage({ page, i, current, total, setPageRef, language, fontScale }
       }}
       animate={animateProps}
       transition={{ type: 'tween', duration: 0.45, ease: [0.76, 0, 0.24, 1] }}
-      onAnimationComplete={() => {
-        if (i === current && ref.current && html) drawAnnotations(ref.current);
-      }}
       className="letter-page"
       style={{ ...styles.page, zIndex: total - i, willChange: Math.abs(i - current) <= 2 ? 'transform, opacity' : undefined, ...(page.pagetype === 'manuscript' ? styles.manuscript : {}), ...(page.pagetype === 'lined' ? { background: '#fff' } : {}), ...(page.pagetype === 'flyer' ? { background: '#c9c3bb', justifyContent: 'center' } : {}) }}
     >
