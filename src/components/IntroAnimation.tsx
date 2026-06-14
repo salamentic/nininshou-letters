@@ -94,7 +94,7 @@ export default function IntroAnimation({ onDone }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: ready ? 1 : 0 }}
             transition={{ duration: 0.3 }}
-            style={{ transform: 'translateX(-20px) scale(2.5)', transformOrigin: 'center' }}
+            style={{ transform: 'translateX(-40px) scale(1)', transformOrigin: 'center' }}
           >
             <div id={DMAK_ID} />
           </motion.div>
@@ -105,11 +105,11 @@ export default function IntroAnimation({ onDone }: Props) {
             transition={{ duration: 0.6 }}
             style={{
               position: 'absolute',
-              left: 'calc(50% + 90px)',
+              left: 'calc(50% + 15px)',
               top: '50%',
               transform: 'translateY(-50%)',
               fontFamily: "'Caveat'",
-              fontSize: 25,
+              fontSize: 20,
               textTransform: 'capitalize',
               color: '#3a2e22',
               letterSpacing: '0.08em',
